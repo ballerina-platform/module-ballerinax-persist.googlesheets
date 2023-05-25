@@ -2,7 +2,7 @@
 
 This package includes Ballerina `persist` support, which provides functionality to store and query data from Google Sheets conveniently through a data model instead of using Google Sheets APIs.
 
-The `persist` commands will make it easy to enable Ballerina Persistence Layer in a bal project. With this support, users need not worry about the persistence layer in a project. Users can define an entity data model, validate the model and generate `persist` clients, which provide convenient APIs to store and query data in a data store.
+The `persist` commands will make it easy to enable Bal persist in a Ballerina project. With this support, users need not worry about the persistence of a project. Users can define an entity data model, validate the model and generate `persist` clients, which provide convenient APIs to store and query data in a data store.
 
 ## Report issues
 
