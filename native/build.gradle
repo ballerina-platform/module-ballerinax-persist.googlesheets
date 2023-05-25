@@ -124,7 +124,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId project.group
-            artifactId "persist-googlesheets-native"
+            artifactId "persist.googlesheets-native"
             version = project.version
             artifact jar
         }
