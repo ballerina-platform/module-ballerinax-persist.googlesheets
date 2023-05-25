@@ -213,6 +213,4 @@ function gsheetsCompositeKeyDeleteTestNegative() returns error? {
     } else {
         test:assertFail("Error expected.");
     }
-
-    
 }
