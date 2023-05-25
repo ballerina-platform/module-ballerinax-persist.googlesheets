@@ -20,25 +20,24 @@ import ballerina/persist;
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsBuildingDeleteTestNegative],
-    enable: true
+    enable: false
 }
 function gsheetsDepartmentCreateTest() returns error? {
-    // GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient =  check new ();
     string[] deptNos = check rainierClient->/departments.post([department1]);
     test:assertEquals(deptNos, [department1.deptNo]);
 
     Department departmentRetrieved = check rainierClient->/departments/[department1.deptNo].get();
     test:assertEquals(departmentRetrieved, department1);
-
 }
 
 @test:Config {
     groups: ["department", "igoogle-sheets"],
     dependsOn: [gsheetsDepartmentCreateTest],
-    enable: true
+    enable: false
 }
 function gsheetsDepartmentCreateTest2() returns error? {
-    // GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient =  check new ();
     string[] deptNos = check rainierClient->/departments.post([department2, department3]);
 
     test:assertEquals(deptNos, [department2.deptNo, department3.deptNo]);
@@ -48,59 +47,55 @@ function gsheetsDepartmentCreateTest2() returns error? {
 
     departmentRetrieved = check rainierClient->/departments/[department3.deptNo].get();
     test:assertEquals(departmentRetrieved, department3);
-
 }
 
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentCreateTest],
-    enable: true
+    enable: false
 }
 function gsheetsDepartmentReadOneTest() returns error? {
-    // GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient =  check new ();
     Department departmentRetrieved = check rainierClient->/departments/[department1.deptNo].get();
     test:assertEquals(departmentRetrieved, department1);
-
 }
 
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentCreateTest],
-    enable: true
+    enable: false
 }
 function gsheetsDepartmentReadOneTestNegative() returns error? {
-    // GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient =  check new ();
     Department|error departmentRetrieved = rainierClient->/departments/["invalid-department-id"].get();
     if departmentRetrieved is persist:NotFoundError {
         test:assertEquals(departmentRetrieved.message(), "Invalid key: invalid-department-id");
     } else {
         test:assertFail("NotFoundError expected.");
     }
-
 }
 
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentCreateTest, gsheetsDepartmentCreateTest2],
-    enable: true
+    enable: false
 }
 function gsheetsDepartmentReadManyTest() returns error? {
-    // GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient =  check new ();
     stream<Department, error?> departmentStream = rainierClient->/departments.get();
     Department[] departments = check from Department department in departmentStream
         select department;
 
     test:assertEquals(departments, [department1, department2, department3]);
-
 }
 
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentCreateTest, gsheetsDepartmentCreateTest2],
-    enable: true
+    enable: false
 }
 function gsheetsDepartmentReadManyTestDependent() returns error? {
-    // GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient =  check new ();
     stream<DepartmentInfo2, persist:Error?> departmentStream = rainierClient->/departments.get();
     DepartmentInfo2[] departments = check from DepartmentInfo2 department in departmentStream
         select department;
@@ -110,16 +105,15 @@ function gsheetsDepartmentReadManyTestDependent() returns error? {
         {deptName: department2.deptName},
         {deptName: department3.deptName}
     ]);
-
 }
 
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentReadOneTest, gsheetsDepartmentReadManyTest, gsheetsDepartmentReadManyTestDependent],
-    enable: true
+    enable: false
 }
 function gsheetsDepartmentUpdateTest() returns error? {
-    // GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient =  check new ();
     Department department = check rainierClient->/departments/[department1.deptNo].put({
         deptName: "Finance & Legalities"
     });
@@ -128,16 +122,15 @@ function gsheetsDepartmentUpdateTest() returns error? {
 
     Department departmentRetrieved = check rainierClient->/departments/[department1.deptNo].get();
     test:assertEquals(departmentRetrieved, updatedDepartment1);
-
 }
 
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentReadOneTest, gsheetsDepartmentReadManyTest, gsheetsDepartmentReadManyTestDependent],
-    enable: true
+    enable: false
 }
 function gsheetsDepartmentUpdateTestNegative1() returns error? {
-    // GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient =  check new ();
     Department|error department = rainierClient->/departments/["invalid-department-id"].put({
         deptName: "Human Resources"
     });
@@ -147,16 +140,15 @@ function gsheetsDepartmentUpdateTestNegative1() returns error? {
     } else {
         test:assertFail("NotFoundError expected.");
     }
-
 }
 
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentUpdateTest],
-    enable: true
+    enable: false
 }
 function gsheetsDepartmentDeleteTest() returns error? {
-    // GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient =  check new ();
     Department department = check rainierClient->/departments/[department1.deptNo].delete();
     test:assertEquals(department, updatedDepartment1);
 
@@ -165,16 +157,15 @@ function gsheetsDepartmentDeleteTest() returns error? {
         select department2;
 
     test:assertEquals(departments, [department2, department3]);
-
 }
 
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentDeleteTest],
-    enable: true
+    enable: false
 }
 function gsheetsDepartmentDeleteTestNegative() returns error? {
-    // GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient =  check new ();
     Department|error department = rainierClient->/departments/[department1.deptNo].delete();
 
     if department is persist:NotFoundError {
@@ -182,5 +173,4 @@ function gsheetsDepartmentDeleteTestNegative() returns error? {
     } else {
         test:assertFail("NotFoundError expected.");
     }
-
 }

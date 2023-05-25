@@ -159,4 +159,3 @@ public isolated client class GoogleSheetsRainierClientAllDataType {
         return ();
     }
 }
-

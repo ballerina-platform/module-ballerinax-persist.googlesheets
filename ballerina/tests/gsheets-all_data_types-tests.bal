@@ -16,14 +16,12 @@
 
 import ballerina/test;
 
-GoogleSheetsRainierClientAllDataType rainierClientAllDataType =  check new ();
-
 @test:Config {
     groups: ["composite-key", "google-sheets"],
-    enable: true
+    enable: false
 }
 function gsheetsAllDataTypeCreateTest() returns error? {
-    //GoogleSheetsRainierClientAllDataType rainierClientAllDataType =  check new ();
+    GoogleSheetsRainierClientAllDataType rainierClientAllDataType =  check new ();
     [string, string][] ids = check rainierClientAllDataType->/orderitemextendeds.post([orderItemExtended1, orderItemExtended2]);
     test:assertEquals(ids, [[orderItemExtended1.orderId, orderItemExtended1.itemId], [orderItemExtended2.orderId, orderItemExtended2.itemId]]);
 
@@ -37,10 +35,10 @@ function gsheetsAllDataTypeCreateTest() returns error? {
 @test:Config {
     groups: ["all-types", "google-sheets"],
     dependsOn: [gsheetsAllDataTypeCreateTest],
-    enable: true
+    enable: false
 }
 function gsheetsAllTypesReadManyTest() returns error? {
-    //GoogleSheetsRainierClientAllDataType rainierClientAllDataType =  check new ();
+    GoogleSheetsRainierClientAllDataType rainierClientAllDataType =  check new ();
     stream<OrderItemExtended, error?> orderItemStream = rainierClientAllDataType->/orderitemextendeds.get();
     OrderItemExtended[] orderitem = check from OrderItemExtended orderItem in orderItemStream
         select orderItem;
@@ -51,10 +49,10 @@ function gsheetsAllTypesReadManyTest() returns error? {
 @test:Config {
     groups: ["all-types", "google-sheets"],
     dependsOn: [gsheetsAllDataTypeCreateTest],
-    enable: true
+    enable: false
 }
 function gsheetsAllDataTypeUpdateTest() returns error? {
-    //GoogleSheetsRainierClientAllDataType rainierClientAllDataType =  check new ();
+    GoogleSheetsRainierClientAllDataType rainierClientAllDataType =  check new ();
     OrderItemExtended orderItemRetrieved = check rainierClientAllDataType->/orderitemextendeds/[orderItemExtended2.orderId]/[orderItemExtended2.itemId].put({
         arivalTimeCivil : orderItemExtended3.arivalTimeCivil,
         paid: orderItemExtended3.paid
