@@ -3,14 +3,14 @@ org = "ballerinax"
 name = "persist.googlesheets"
 version = "1.0.0"
 authors = ["Ballerina"]
-keywords = ["persist", "googlesheets", "experimental"]
-repository = "https://github.com/ballerina-platform/module-ballerinax-persist.googlesheets"
+keywords = ["persistgooglesheets", "experimental"]
+repository = "https://github.com/ballerina-platform/module-ballerina-persist"
 icon = "icon.png"
 license = ["Apache-2.0"]
-distribution = "2201.6.0"
+distribution = "2201.5.0"
 
 [[platform.java11.dependency]]
 groupId = "io.ballerina.stdlib"
-artifactId = "persist.googlesheets-native"
+artifactId = "persist-googlesheets-native"
 version = "1.0.0"
 path = "../native/build/libs/persist.googlesheets-native-1.0.0-SNAPSHOT.jar"
