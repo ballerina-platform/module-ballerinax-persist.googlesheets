@@ -134,7 +134,7 @@ public isolated client class GoogleSheetsClient {
     # + return - A record in the `rowType` type or a `persist:Error` if the operation fails
     public isolated function runReadByKeyQuery(typedesc<record {}> rowType, typedesc<record {}> rowTypeWithIdFields, map<anydata> typeMap, anydata key, string[] fields = [], string[] include = [], typedesc<record {}>[] typeDescriptions = []) returns record {}|persist:Error {
         record {} 'object = check self.queryOne(key);
-        'object = filterRecord('object, self.addKeyFields(fields));
+        'object = persist:filterRecord('object, self.addKeyFields(fields));
         check self.getManyRelations('object, fields, include, typeDescriptions);
         self.removeUnwantedFields('object, fields);
         do {
@@ -398,23 +398,6 @@ public isolated client class GoogleSheetsClient {
             metadataValue += string `"${rowValues[key].toString()}"`;
         }
         return string `[${metadataValue}]`;
-    }
-
-    public isolated function getKey(anydata|record {} 'object) returns anydata|record {} {
-        record {} keyRecord = {};
-
-        if self.keyFields.length() == 1 && 'object is record {} {
-            return 'object[self.keyFields[0]];
-        }
-
-        if 'object is record {} {
-            foreach string key in self.keyFields {
-                keyRecord[key] = 'object[key];
-            }
-        } else {
-            keyRecord[self.keyFields[0]] = 'object;
-        }
-        return keyRecord;
     }
 
     private isolated function removeUnwantedFields(record {} 'object, string[] fields) {

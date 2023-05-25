@@ -1,6 +1,6 @@
-// Copyright (c) 2022 WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+// Copyright (c) 2023 WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
 //
-// WSO2 Inc. licenses this file to you under the Apache License,
+// WSO2 LLC. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,74 +15,7 @@
 // under the License.
 
 import ballerina/persist;
-import ballerina/jballerina.java;
 import ballerinax/googleapis.sheets;
-
-
-isolated function getKeyFromAlreadyExistsErrorMessage(string errorMessage) returns string|persist:Error {
-    int? startIndex = errorMessage.indexOf(".Duplicate entry '");
-    int? endIndex = errorMessage.indexOf("' for key");
-
-    if startIndex is () || endIndex is () {
-        return <persist:Error>error("Unable to determine key from DuplicateKey error message.");
-    }
-
-    string key = errorMessage.substring(startIndex + 18, endIndex);
-    return key;
-}
-
-isolated function convertToArray(typedesc<record {}> elementType, record {}[] arr) returns elementType[] = @java:Method {
-    'class: "io.ballerina.stdlib.persist.googlesheets.Utils"
-} external;
-
-
-# Closes the entity stream.
-#
-# + customStream - Stream that needs to be closed
-# + return - `()` if the operation is performed successfully or a `persist:Error` if the operation fails
-public isolated function closeEntityStream(stream<anydata, error?>? customStream) returns persist:Error? {
-    if customStream is stream<anydata, error?> {
-        error? e = customStream.close();
-        if e is error {
-            return <persist:Error>error(e.message());
-        }
-    }
-}
-
-public isolated function filterRecord(record {} 'object, string[] fields) returns record {} {
-    record {} retrieved = {};
-
-    foreach string 'field in fields {
-
-        // ignore many relations
-        if 'field.includes("[]") {
-            continue;
-        }
-
-        // if field is part of a relation
-        if 'field.includes(".") {
-
-            int splitIndex = <int>'field.indexOf(".");
-            string relation = 'field.substring(0, splitIndex);
-            string innerField = 'field.substring(splitIndex + 1, 'field.length());
-
-            if 'object[relation] is record {} {
-                anydata val = (<record {}>'object[relation])[innerField];
-
-                if !(retrieved[relation] is record {}) {
-                    retrieved[relation] = {};
-                }
-
-                record {} innerRecord = <record {}>'retrieved[relation];
-                innerRecord[innerField] = val;
-            }
-        } else {
-            retrieved['field] = 'object['field];
-        }
-
-    }
-    return retrieved;
-}
 
 public isolated function getSheetIds(sheets:Client googleSheetClient, record {|SheetMetadata...;|} metadata, string spreadsheetId) returns map<int>|persist:Error {
     map<int> sheetIds = {};
@@ -95,21 +28,4 @@ public isolated function getSheetIds(sheets:Client googleSheetClient, record {|S
         sheetIds[key] = sheet.properties.sheetId;
     }
     return sheetIds;
-}
-
-public isolated function getKey(anydata|record {} 'object, string[] keyFields) returns anydata|record {} {
-    record {} keyRecord = {};
-
-    if keyFields.length() == 1 && 'object is record {} {
-        return 'object[keyFields[0]];
-    }
-
-    if 'object is record {} {
-        foreach string key in keyFields {
-            keyRecord[key] = 'object[key];
-        }
-    } else {
-        keyRecord[keyFields[0]] = 'object;
-    }
-    return keyRecord;
 }

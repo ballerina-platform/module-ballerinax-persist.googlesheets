@@ -373,7 +373,7 @@ public isolated client class GoogleSheetsRainierClient {
             on 'object.departmentDeptNo equals department?.deptNo
             outer join var workspace in workspacesStream
             on 'object.workspaceWorkspaceId equals workspace?.workspaceId
-            select filterRecord(
+            select persist:filterRecord(
                 {
                 ...'object,
                 "department": department,
@@ -387,7 +387,7 @@ public isolated client class GoogleSheetsRainierClient {
         stream<Department, persist:Error?> departmenttStream = self.queryDepartmentsStream();
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         error? unionResult = from record {} 'object in employeesStream
-            where getKey('object, ["empNo"]) == key
+            where persist:getKey('object, ["empNo"]) == key
             outer join var department in departmenttStream
             on 'object.departmentDeptNo equals department?.deptNo
             outer join var workspace in workspacesStream
@@ -408,7 +408,7 @@ public isolated client class GoogleSheetsRainierClient {
     private isolated function queryBuildings(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         record {}[] outputArray = check from record {} 'object in buildingsStream
-            select filterRecord({
+            select persist:filterRecord({
                 ...'object
             }, fields);
         return outputArray.toStream();
@@ -417,7 +417,7 @@ public isolated client class GoogleSheetsRainierClient {
     private isolated function queryOneBuildings(anydata key) returns record {}|persist:NotFoundError {
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in buildingsStream
-            where getKey('object, ["buildingCode"]) == key
+            where persist:getKey('object, ["buildingCode"]) == key
             do {
                 return {
                     ...'object
@@ -433,7 +433,7 @@ public isolated client class GoogleSheetsRainierClient {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         return from record {} 'object in workspacesStream
             where 'object.locationBuildingCode == value["buildingCode"]
-            select filterRecord({
+            select persist:filterRecord({
                 ...'object
             }, fields);
     }
@@ -442,7 +442,7 @@ public isolated client class GoogleSheetsRainierClient {
         
         stream<Department, persist:Error?> departmenttStream = self.queryDepartmentsStream();
         record {}[] outputArray = check from record {} 'object in departmenttStream
-            select filterRecord({
+            select persist:filterRecord({
                 ...'object
             }, fields);
         return outputArray.toStream();
@@ -451,7 +451,7 @@ public isolated client class GoogleSheetsRainierClient {
     private isolated function queryOneDepartments(anydata key) returns record {}|persist:NotFoundError {
         stream<Department, persist:Error?> departmenttStream = self.queryDepartmentsStream();
         error? unionResult = from record {} 'object in departmenttStream
-            where getKey('object, ["deptNo"]) == key
+            where persist:getKey('object, ["deptNo"]) == key
             do {
                 return {
                     ...'object
@@ -467,7 +467,7 @@ public isolated client class GoogleSheetsRainierClient {
         stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
         return from record {} 'object in employeesStream
             where 'object["departmentDeptNo"] == value["deptNo"]
-            select filterRecord({
+            select persist:filterRecord({
                 ...'object
             }, fields);
     }
@@ -478,7 +478,7 @@ public isolated client class GoogleSheetsRainierClient {
         record {}[] outputArray = check from record {} 'object in workspacesStream
             outer join var location in buildingsStream
             on 'object.locationBuildingCode equals location?.buildingCode
-            select filterRecord({
+            select persist:filterRecord({
                 ...'object,
                 "location": location
             }, fields);
@@ -489,7 +489,7 @@ public isolated client class GoogleSheetsRainierClient {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in workspacesStream
-            where getKey('object, ["workspaceId"]) == key
+            where persist:getKey('object, ["workspaceId"]) == key
             outer join var location in buildingsStream
             on 'object.locationBuildingCode equals location?.buildingCode
             do {
@@ -508,7 +508,7 @@ public isolated client class GoogleSheetsRainierClient {
         stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
         return from record {} 'object in employeesStream
             where 'object.workspaceWorkspaceId == value["workspaceId"]
-            select filterRecord({
+            select persist:filterRecord({
                 ...'object
             }, fields);
     }
@@ -516,7 +516,7 @@ public isolated client class GoogleSheetsRainierClient {
     private isolated function queryOrderItems(string[] fields) returns stream<record {|anydata...;|}, persist:Error?>|persist:Error {
         stream<OrderItem, persist:Error?> orderItemsStream = self.queryOrderItemsStream();
         record {}[] outputArray = check from record {} 'object in orderItemsStream
-            select filterRecord({
+            select persist:filterRecord({
                 ...'object
             }, fields);
         return outputArray.toStream();
@@ -525,7 +525,7 @@ public isolated client class GoogleSheetsRainierClient {
     private isolated function queryOneOrderItems(anydata key) returns record {}|persist:NotFoundError {
         stream<OrderItem, persist:Error?> orderItemsStream = self.queryOrderItemsStream();
         error? unionResult = from record {} 'object in orderItemsStream
-            where getKey('object, ["orderId", "itemId"]) == key
+            where persist:getKey('object, ["orderId", "itemId"]) == key
             do {
                 return {
                     ...'object

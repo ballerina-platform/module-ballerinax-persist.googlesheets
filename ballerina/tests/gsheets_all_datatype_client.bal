@@ -129,7 +129,7 @@ public isolated client class GoogleSheetsRainierClientAllDataType {
     private isolated function queryOrderitemextendeds(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
         stream<OrderItemExtended, persist:Error?> orderitemextendedsStream = self.queryOrderitemextendedsStream();
         record {}[] outputArray = check from record {} 'object in orderitemextendedsStream
-            select filterRecord({
+            select persist:filterRecord({
                 ...'object
             }, fields);
         return outputArray.toStream();
@@ -138,7 +138,7 @@ public isolated client class GoogleSheetsRainierClientAllDataType {
     private isolated function queryOneOrderitemextendeds(anydata key) returns record {}|persist:NotFoundError {
         stream<OrderItemExtended, persist:Error?> orderitemextendedsStream = self.queryOrderitemextendedsStream();
         error? unionResult = from record {} 'object in orderitemextendedsStream
-            where getKey('object, ["orderId", "itemId"]) == key
+            where persist:getKey('object, ["orderId", "itemId"]) == key
             do {
                 return {
                     ...'object

@@ -74,7 +74,11 @@ public class PersistGoogleSheetsStream {
     }
 
     public isolated function close() returns persist:Error? {
-        check closeEntityStream(self.anydataStream);
+        if self.anydataStream is stream<anydata, error?> {
+            error? e = (<stream<anydata, error?>>self.anydataStream).close();
+            if e is error {
+                return <persist:Error>error(e.message());
+            }
+        }
     }
 }
-
