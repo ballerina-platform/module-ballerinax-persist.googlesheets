@@ -27,13 +27,13 @@ import io.ballerina.runtime.api.Module;
  * @since 0.1.1
  */
 public class ModuleUtils {
-    private static Module sqlModule;
+    private static Module module;
     private ModuleUtils() {
     }
     public static void setModule(Environment env) {
-        sqlModule = env.getCurrentModule();
+        module = env.getCurrentModule();
     }
     public static Module getModule() {
-        return sqlModule;
+        return module;
     }
 }
