@@ -1,4 +1,4 @@
-Ballerina Persist.GoogleSheets Library
+Ballerina Persist - Google Sheets Library
 ===================
 
   [![Build](https://github.com/ballerina-platform/module-ballerina-persist/actions/workflows/build-timestamped-master.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-persist/actions/workflows/build-timestamped-master.yml)
