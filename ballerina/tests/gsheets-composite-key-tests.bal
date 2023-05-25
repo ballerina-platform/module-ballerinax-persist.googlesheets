@@ -69,7 +69,6 @@ function gsheetsCmpositeKeyCreateTestNegative() returns error? {
     } else {
         test:assertFail("AlreadyExistsError expected");
     }
-    
 }
 
 @test:Config {
