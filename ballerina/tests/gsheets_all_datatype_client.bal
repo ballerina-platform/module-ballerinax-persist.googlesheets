@@ -11,7 +11,7 @@ import ballerina/persist;
 const ORDER_ITEM_EXTENDED = "orderitemextendeds";
 
 public isolated client class GoogleSheetsRainierClientAllDataType {
-    *AbstractPersistClient;
+    *persist:AbstractPersistClient;
 
     private final sheets:Client googleSheetClient;
 

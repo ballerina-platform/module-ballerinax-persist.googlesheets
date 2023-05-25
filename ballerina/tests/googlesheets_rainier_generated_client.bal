@@ -26,7 +26,7 @@ const DEPARTMENT = "departments";
 const ORDER_ITEM = "orderitems";
 
 public isolated client class GoogleSheetsRainierClient {
-    *AbstractPersistClient;
+    *persist:AbstractPersistClient;
 
     private final sheets:Client googleSheetClient;
     private final http:Client httpClient;
