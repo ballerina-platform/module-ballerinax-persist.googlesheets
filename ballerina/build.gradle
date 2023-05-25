@@ -32,7 +32,7 @@ buildscript {
     }
 }
 
-description = 'Ballerina - Persist Ballerina Generator'
+description = 'Ballerina Persist - Google Sheets Extension'
 
 def packageName = 'persist.googlesheets'
 def packageOrg = 'ballerinax'
