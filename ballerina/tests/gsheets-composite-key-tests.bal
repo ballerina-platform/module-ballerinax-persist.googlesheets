@@ -135,8 +135,6 @@ function gsheetsCompositeKeyReadOneTestNegative2() returns error? {
     } else {
         test:assertFail("Error expected.");
     }
-
-    
 }
 
 @test:Config {
