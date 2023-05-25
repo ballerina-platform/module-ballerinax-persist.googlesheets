@@ -16,12 +16,10 @@ rootProject.name = 'ballerinax-persist.googlesheets'
 include ':checkstyle'
 include ':persist.googlesheets-native'
 include ':persist.googlesheets-ballerina'
-//include ':persist-examples'
 
 project(':checkstyle').projectDir = file("build-config${File.separator}checkstyle")
 project(':persist.googlesheets-native').projectDir = file('native')
 project(':persist.googlesheets-ballerina').projectDir = file('ballerina')
-//project(':persist-examples').projectDir = file('examples')
 
 gradleEnterprise {
     buildScan {
