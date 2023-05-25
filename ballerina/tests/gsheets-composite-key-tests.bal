@@ -83,7 +83,6 @@ function gsheetsCompositeKeyReadManyTest() returns error? {
         select orderItem;
 
     test:assertEquals(orderitem, [orderItem1, orderItem2]);
-    
 }
 
 @test:Config {
