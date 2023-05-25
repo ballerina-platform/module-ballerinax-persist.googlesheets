@@ -105,7 +105,6 @@ function gsheetsCompositeKeyReadOneTest2() returns error? {
     // GoogleSheetsRainierClient rainierClient =  check new ();
     OrderItem orderItem = check rainierClient->/orderitems/[orderItem1.orderId]/[orderItem1.itemId].get();
     test:assertEquals(orderItem, orderItem1);
-    
 }
 
 @test:Config {
