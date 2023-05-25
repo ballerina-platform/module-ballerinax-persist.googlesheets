@@ -11,6 +11,6 @@ distribution = "2201.5.0"
 
 [[platform.java11.dependency]]
 groupId = "io.ballerina.stdlib"
-artifactId = "persist-googlesheets-native"
+artifactId = "persist.googlesheets-native"
 version = "@toml.version@"
 path = "../native/build/libs/persist.googlesheets-native-@project.version@.jar"
