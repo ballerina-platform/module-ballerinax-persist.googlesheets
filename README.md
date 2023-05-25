@@ -1,2 +1,1 @@
-# module-ballerinax-persist.googlesheets
-Google Sheets support for Ballerina Persist
+Ballerina Persist - Google Sheets Library
