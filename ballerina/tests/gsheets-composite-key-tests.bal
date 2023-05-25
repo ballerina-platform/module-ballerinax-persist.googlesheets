@@ -172,8 +172,6 @@ function gsheetsCompositeKeyUpdateTestNegative() returns error? {
     } else {
         test:assertFail("Error expected.");
     }
-
-    
 }
 
 @test:Config {
