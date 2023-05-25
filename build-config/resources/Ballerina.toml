@@ -1,0 +1,16 @@
+[package]
+org = "ballerinax"
+name = "persist.googlesheets"
+version = "@toml.version@"
+authors = ["Ballerina"]
+keywords = ["persistgooglesheets", "experimental"]
+repository = "https://github.com/ballerina-platform/module-ballerina-persist"
+icon = "icon.png"
+license = ["Apache-2.0"]
+distribution = "2201.5.0"
+
+[[platform.java11.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist-googlesheets-native"
+version = "@toml.version@"
+path = "../native/build/libs/persist.googlesheets-native-@project.version@.jar"
