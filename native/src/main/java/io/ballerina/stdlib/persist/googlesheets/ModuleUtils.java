@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2023, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
+ * WSO2 LLC. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,16 +27,12 @@ import io.ballerina.runtime.api.Module;
  * @since 0.1.1
  */
 public class ModuleUtils {
-
     private static Module sqlModule;
-
     private ModuleUtils() {
     }
-
     public static void setModule(Environment env) {
         sqlModule = env.getCurrentModule();
     }
-
     public static Module getModule() {
         return sqlModule;
     }

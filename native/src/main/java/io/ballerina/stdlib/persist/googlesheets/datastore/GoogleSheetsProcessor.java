@@ -40,15 +40,18 @@ import io.ballerina.runtime.api.values.BTypedesc;
 import io.ballerina.stdlib.persist.googlesheets.Constants;
 import io.ballerina.stdlib.persist.googlesheets.ModuleUtils;
 
-import static io.ballerina.stdlib.persist.googlesheets.Constants.ERROR;
-import static io.ballerina.stdlib.persist.googlesheets.Constants.KEY_FIELDS;
-import static io.ballerina.stdlib.persist.googlesheets.Utils.getEntity;
+import static io.ballerina.stdlib.persist.Constants.ERROR;
+import static io.ballerina.stdlib.persist.Constants.KEY_FIELDS;
+import static io.ballerina.stdlib.persist.Constants.RUN_READ_BY_KEY_QUERY_METHOD;
+import static io.ballerina.stdlib.persist.Constants.RUN_READ_QUERY_METHOD;
+import static io.ballerina.stdlib.persist.Utils.getEntity;
+import static io.ballerina.stdlib.persist.Utils.getKey;
+import static io.ballerina.stdlib.persist.Utils.getMetadata;
+import static io.ballerina.stdlib.persist.Utils.getPersistClient;
+import static io.ballerina.stdlib.persist.Utils.getRecordTypeWithKeyFields;
 import static io.ballerina.stdlib.persist.googlesheets.Utils.getEntityFromStreamMethod;
 import static io.ballerina.stdlib.persist.googlesheets.Utils.getFieldTypes;
-import static io.ballerina.stdlib.persist.googlesheets.Utils.getKey;
-import static io.ballerina.stdlib.persist.googlesheets.Utils.getMetadata;
-import static io.ballerina.stdlib.persist.googlesheets.Utils.getPersistClient;
-import static io.ballerina.stdlib.persist.googlesheets.Utils.getRecordTypeWithKeyFields;
+
 
 /**
  * This class provides the GoogleSheets query processing implementations for persistence.
@@ -79,13 +82,13 @@ public class GoogleSheetsProcessor {
 
         Future balFuture = env.markAsync();
         env.getRuntime().invokeMethodAsyncSequentially(
-                persistClient, Constants.RUN_READ_QUERY_METHOD,
+                persistClient, RUN_READ_QUERY_METHOD,
                 null, null, new Callback() {
                     @Override
                     public void notifySuccess(Object o) {
                         BStream sqlStream = (BStream) o;
                         BObject persistStream = ValueCreator.createObjectValue(
-                                ModuleUtils.getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM, sqlStream, targetType, 
+                                ModuleUtils.getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM, sqlStream, targetType,
                                 fields, includes, typeDescriptions, persistClient, null
                         );
 
@@ -133,7 +136,7 @@ public class GoogleSheetsProcessor {
                     public void notifySuccess(Object o) {
                         BStream sqlStream = (BStream) o;
                         BObject persistStream = ValueCreator.createObjectValue(
-                                ModuleUtils.getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM, sqlStream, targetType, 
+                                ModuleUtils.getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM, sqlStream, targetType,
                                 fields, includes, typeDescriptions, persistClient, null
                         );
 
@@ -144,7 +147,6 @@ public class GoogleSheetsProcessor {
                                         PredefinedTypes.TYPE_NULL), persistStream)
                         );
                     }
-
                     @Override
                     public void notifyFailure(BError bError) {
                         balFuture.complete(bError);
@@ -152,7 +154,6 @@ public class GoogleSheetsProcessor {
                 }, null, streamTypeWithIdFields,
                 targetTypeWithIdFields, true, typeMap, true, fields, true, includes, true
         );
-
         return null;
     }
 
@@ -172,12 +173,10 @@ public class GoogleSheetsProcessor {
         BArray includes = metadata[1];
         BArray typeDescriptions = metadata[2];
         BMap<BString, Object> typeMap = getFieldTypes(recordType);
-
         Object key = getKey(env, path);
-
         Future balFuture = env.markAsync();
         env.getRuntime().invokeMethodAsyncSequentially(
-                getPersistClient(client, entity), Constants.RUN_READ_BY_KEY_QUERY_METHOD,
+                getPersistClient(client, entity), RUN_READ_BY_KEY_QUERY_METHOD,
                 null, null, new Callback() {
                     @Override
                     public void notifySuccess(Object o) {
@@ -192,7 +191,6 @@ public class GoogleSheetsProcessor {
                 targetType, true, targetTypeWithIdFields, true, typeMap, true, key, true, fields, true, includes, true,
                 typeDescriptions, true
         );
-
         return null;
     }
 }
