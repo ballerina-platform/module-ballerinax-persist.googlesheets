@@ -12,7 +12,7 @@ This library provides Ballerina `persist` Tooling for Google Sheets, which provi
 
 The `persist` commands will make it easy to enable Ballerina Persistence Layer in a bal project. With this support, users need not worry about the persistence layer in a project. Users can define an entity data model, validate the model and generate `persist` clients for Google Sheets, which provide convenient APIs to store and query data in a data store.
 
-For more information, see [`persist` API Documentation](https://lib.ballerina.io/ballerina/persist/latest).
+For more information, see [`persist` API Documentation](https://lib.ballerina.io/ballerinax/persist.googlesheets/latest).
 
 ## Issues and projects 
 
