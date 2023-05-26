@@ -187,6 +187,9 @@ public isolated client class GoogleSheetsClient {
                 foreach string rowValue in rowValues {
                     string columnName = re ` `.replaceAll(re `"`.replaceAll(columnNames[i], ""), "");
                     string value = re `"`.replaceAll(rowValue, "");
+                    if !self.dataTypes.hasKey(columnName) {
+                        return <persist:Error>error("Error: the spreadsheet is not initialised correctly.");
+                    }
                     string dataType = self.dataTypes.get(columnName).toString();
                     if dataType == "time:Date" || dataType == "time:TimeOfDay" ||dataType == "time:Civil" || dataType == "time:Utc" {
                         SheetFieldType|error typedValue = self.dataConverter(value, dataType);

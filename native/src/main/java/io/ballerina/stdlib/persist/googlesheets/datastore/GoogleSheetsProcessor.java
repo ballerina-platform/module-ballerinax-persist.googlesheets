@@ -86,6 +86,9 @@ public class GoogleSheetsProcessor {
                 null, null, new Callback() {
                     @Override
                     public void notifySuccess(Object o) {
+                        if (o instanceof BError) {
+                            throw (BError) o;
+                        }
                         BStream gSheetStream = (BStream) o;
                         BObject persistStream = ValueCreator.createObjectValue(
                                 ModuleUtils.getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
@@ -135,6 +138,9 @@ public class GoogleSheetsProcessor {
                 null, null, new Callback() {
                     @Override
                     public void notifySuccess(Object o) {
+                        if (o instanceof BError) {
+                            throw (BError) o;
+                        }
                         BStream gSheetStream = (BStream) o;
                         BObject persistStream = ValueCreator.createObjectValue(
                                 ModuleUtils.getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
