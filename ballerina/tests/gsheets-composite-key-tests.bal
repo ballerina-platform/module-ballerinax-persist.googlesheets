@@ -40,10 +40,9 @@ OrderItem orderItem2Updated = {
 
 @test:Config {
     groups: ["composite-key", "google-sheets"],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyCreateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     [string, string][] ids = check rainierClient->/orderitems.post([orderItem1, orderItem2]);
     test:assertEquals(ids, [[orderItem1.orderId, orderItem1.itemId], [orderItem2.orderId, orderItem2.itemId]]);
 
@@ -57,10 +56,9 @@ function gsheetsCompositeKeyCreateTest() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCmpositeKeyCreateTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     [string, string][]|error ids = rainierClient->/orderitems.post([orderItem1]);
     if ids is persist:AlreadyExistsError {
         test:assertEquals(ids.message(), "Duplicate key: [\"order-1\",\"item-1\"]");
@@ -72,10 +70,9 @@ function gsheetsCmpositeKeyCreateTestNegative() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyReadManyTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     stream<OrderItem, error?> orderItemStream = rainierClient->/orderitems.get();
     OrderItem[] orderitem = check from OrderItem orderItem in orderItemStream
         select orderItem;
@@ -86,10 +83,9 @@ function gsheetsCompositeKeyReadManyTest() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyReadOneTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     OrderItem orderItem = check rainierClient->/orderitems/[orderItem1.orderId]/[orderItem1.itemId].get();
     test:assertEquals(orderItem, orderItem1);
 }
@@ -97,7 +93,7 @@ function gsheetsCompositeKeyReadOneTest() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyReadOneTest2() returns error? {
     GoogleSheetsRainierClient rainierClient =  check new ();
@@ -108,10 +104,9 @@ function gsheetsCompositeKeyReadOneTest2() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyReadOneTestNegative1() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     OrderItem|error orderItem = rainierClient->/orderitems/["invalid-order-id"]/[orderItem1.itemId].get();
     if orderItem is persist:NotFoundError {
         test:assertEquals(orderItem.message(), "Invalid key: {\"orderId\":\"invalid-order-id\",\"itemId\":\"item-1\"}");
@@ -123,10 +118,9 @@ function gsheetsCompositeKeyReadOneTestNegative1() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyReadOneTestNegative2() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     OrderItem|error orderItem = rainierClient->/orderitems/[orderItem1.orderId]/["invalid-item-id"].get();
     if orderItem is persist:NotFoundError {
         test:assertEquals(orderItem.message(), "Invalid key: {\"orderId\":\"order-1\",\"itemId\":\"invalid-item-id\"}");
@@ -138,10 +132,9 @@ function gsheetsCompositeKeyReadOneTestNegative2() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest, gsheetsCompositeKeyReadOneTest, gsheetsCompositeKeyReadManyTest, gsheetsCompositeKeyReadOneTest2],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyUpdateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     OrderItem orderItem = check rainierClient->/orderitems/[orderItem2.orderId]/[orderItem2.itemId].put({
         quantity: orderItem2Updated.quantity,
         notes: orderItem2Updated.notes
@@ -155,10 +148,9 @@ function gsheetsCompositeKeyUpdateTest() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest, gsheetsCompositeKeyReadOneTest, gsheetsCompositeKeyReadManyTest, gsheetsCompositeKeyReadOneTest2],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyUpdateTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     OrderItem|error orderItem = rainierClient->/orderitems/[orderItem1.orderId]/[orderItem2.itemId].put({
         quantity: 239,
         notes: "updated notes"
@@ -173,10 +165,9 @@ function gsheetsCompositeKeyUpdateTestNegative() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyUpdateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyDeleteTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     OrderItem orderItem = check rainierClient->/orderitems/[orderItem2.orderId]/[orderItem2.itemId].delete();
     test:assertEquals(orderItem, orderItem2Updated);
 
@@ -187,10 +178,9 @@ function gsheetsCompositeKeyDeleteTest() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyDeleteTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyDeleteTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     OrderItem|error orderItem = rainierClient->/orderitems/["invalid-order-id"]/[orderItem2.itemId].delete();
     if orderItem is persist:NotFoundError {
         test:assertEquals(orderItem.message(), "Invalid key: {\"orderId\":\"invalid-order-id\",\"itemId\":\"item-2\"}");
