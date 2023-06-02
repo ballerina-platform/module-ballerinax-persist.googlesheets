@@ -15,11 +15,44 @@
 // under the License.
 
 import ballerina/time;
+import ballerina/test;
+import ballerinax/googleapis.sheets;
 
-configurable string clientId = ?;
-configurable string clientSecret = ?;
-configurable string refreshToken = ?;
+configurable string & readonly refreshToken = os:getEnv("REFRESH_TOKEN");
+configurable string & readonly clientId = os:getEnv("CLIENT_ID");
+configurable string & readonly clientSecret = os:getEnv("CLIENT_SECRET");
 configurable string spreadsheetId = ?;
+
+@test:BeforeSuite
+function initSpreadsheet() returns error? {
+    sheets:ConnectionConfig spreadsheetConfig = {
+        auth: {
+            clientId: clientId,
+            clientSecret: clientSecret,
+            refreshToken: refreshToken,
+            refreshUrl:sheets:REFRESH_URL
+        }
+    };
+    sheets:Client spreadsheetClient = check new (spreadsheetConfig);
+    string[] sheetNames = ["OrderItem", "Employee", "Workspace", "Building", "Department", "OrderItemExtended"];
+    sheets:Spreadsheet spreadSheet = check spreadsheetClient->openSpreadsheetById(spreadsheetId);
+    foreach sheets:Sheet sheet in spreadSheet.sheets {
+        if sheetNames.indexOf(sheet.properties.title, 0) !is () {
+            check spreadsheetClient->removeSheet(spreadsheetId, sheet.properties.sheetId);
+            _ = check spreadsheetClient->addSheet(spreadSheet.spreadsheetId, sheet.properties.title);
+        }
+    }
+
+    _ = check spreadsheetClient->appendValue(spreadSheet.spreadsheetId, ["orderId", "itemId", "quantity" ,"notes"], {sheetName: "OrderItem", startIndex: "A1", endIndex: "E1"}, "USER_ENTERED");
+    _ = check spreadsheetClient->appendValue(spreadSheet.spreadsheetId, ["empNo", "firstName", "lastName", "birthDate", "gender", "hireDate", "departmentDeptNo", "workspaceWorkspaceId"], {sheetName: "Employee", startIndex: "A1", endIndex: "I1"}, "USER_ENTERED");
+    _ = check spreadsheetClient->appendValue(spreadSheet.spreadsheetId, ["workspaceId", "workspaceType", "locationBuildingCode"], {sheetName: "Workspace", startIndex: "A1", endIndex: "D1"}, "USER_ENTERED");
+    _ = check spreadsheetClient->appendValue(spreadSheet.spreadsheetId, ["buildingCode", "city", "state", "country", "postalCode", "type"], {sheetName: "Building", startIndex: "A1", endIndex: "G1"}, "USER_ENTERED");
+    _ = check spreadsheetClient->appendValue(spreadSheet.spreadsheetId, ["deptNo", "deptName"], {sheetName: "Department", startIndex: "A1", endIndex: "C1"}, "USER_ENTERED");
+    _ = check spreadsheetClient->appendValue(spreadSheet.spreadsheetId, ["orderId", "itemId", "CustomerId", "paid", "ammountPaid", "ammountPaidDecimal", "arivalTimeCivil", "arivalTimeUtc", "arivalTimeDate", "arivalTimeTimeOfDay", "orderType"], {sheetName: "OrderItemExtended", startIndex: "A1", endIndex: "L1"}, "USER_ENTERED");
+    rainierClient = check new ();
+}
+
+GoogleSheetsRainierClient rainierClient =  check new ();
 
 OrderItemExtended orderItemExtended1 = {
     orderId: "order-1",
