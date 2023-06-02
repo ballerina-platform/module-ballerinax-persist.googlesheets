@@ -18,7 +18,7 @@ import ballerina/test;
 
 @test:Config {
     groups: ["composite-key", "google-sheets"],
-    enable: false
+    enable: true
 }
 function gsheetsAllDataTypeCreateTest() returns error? {
     GoogleSheetsRainierClientAllDataType rainierClientAllDataType =  check new ();
@@ -35,7 +35,7 @@ function gsheetsAllDataTypeCreateTest() returns error? {
 @test:Config {
     groups: ["all-types", "google-sheets"],
     dependsOn: [gsheetsAllDataTypeCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsAllTypesReadManyTest() returns error? {
     GoogleSheetsRainierClientAllDataType rainierClientAllDataType =  check new ();
@@ -49,7 +49,7 @@ function gsheetsAllTypesReadManyTest() returns error? {
 @test:Config {
     groups: ["all-types", "google-sheets"],
     dependsOn: [gsheetsAllDataTypeCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsAllDataTypeUpdateTest() returns error? {
     GoogleSheetsRainierClientAllDataType rainierClientAllDataType =  check new ();
