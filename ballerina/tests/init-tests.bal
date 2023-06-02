@@ -21,7 +21,7 @@ import ballerinax/googleapis.sheets;
 configurable string & readonly refreshToken = os:getEnv("REFRESH_TOKEN");
 configurable string & readonly clientId = os:getEnv("CLIENT_ID");
 configurable string & readonly clientSecret = os:getEnv("CLIENT_SECRET");
-configurable string spreadsheetId = ?;
+configurable string & readonly spreadsheetId = os:getEnv("SPREADSHEET_ID");
 
 @test:BeforeSuite
 function initSpreadsheet() returns error? {
