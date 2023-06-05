@@ -24,7 +24,7 @@ public type SheetMetadata record {|
     string range;
     map<string> dataTypes;
     isolated function (string[]) returns stream<record {}, persist:Error?>|persist:Error query;
-    isolated function (anydata) returns record {}|persist:NotFoundError queryOne;
+    isolated function (anydata) returns record {}|persist:Error queryOne;
     map<isolated function (record {}, string[]) returns record {}[]|persist:Error> associationsMethods;
 |};
 

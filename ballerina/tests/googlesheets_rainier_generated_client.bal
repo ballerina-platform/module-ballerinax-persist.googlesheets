@@ -382,7 +382,7 @@ public isolated client class GoogleSheetsRainierClient {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneEmployees(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneEmployees(anydata key) returns record {}|persist:Error {
         stream<Employee, persist:Error?> employeesStream = self.queryEmployeesStream();
         stream<Department, persist:Error?> departmenttStream = self.queryDepartmentsStream();
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
@@ -400,9 +400,9 @@ public isolated client class GoogleSheetsRainierClient {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("Employee", key);
     }
 
     private isolated function queryBuildings(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
@@ -414,7 +414,7 @@ public isolated client class GoogleSheetsRainierClient {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneBuildings(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneBuildings(anydata key) returns record {}|persist:Error {
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in buildingsStream
             where persist:getKey('object, ["buildingCode"]) == key
@@ -424,9 +424,9 @@ public isolated client class GoogleSheetsRainierClient {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("Building", key);
     }
 
     private isolated function queryBuildingsWorkspaces(record {} value, string[] fields) returns record {}[]|persist:Error {
@@ -439,7 +439,7 @@ public isolated client class GoogleSheetsRainierClient {
     }
 
     private isolated function queryDepartments(string[] fields) returns stream<record {}, persist:Error?>|persist:Error {
-        
+
         stream<Department, persist:Error?> departmenttStream = self.queryDepartmentsStream();
         record {}[] outputArray = check from record {} 'object in departmenttStream
             select persist:filterRecord({
@@ -448,7 +448,7 @@ public isolated client class GoogleSheetsRainierClient {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneDepartments(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneDepartments(anydata key) returns record {}|persist:Error {
         stream<Department, persist:Error?> departmenttStream = self.queryDepartmentsStream();
         error? unionResult = from record {} 'object in departmenttStream
             where persist:getKey('object, ["deptNo"]) == key
@@ -458,9 +458,9 @@ public isolated client class GoogleSheetsRainierClient {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("Department", key);
     }
 
     private isolated function queryDepartmentsEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
@@ -485,7 +485,7 @@ public isolated client class GoogleSheetsRainierClient {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneWorkspaces(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneWorkspaces(anydata key) returns record {}|persist:Error {
         stream<Workspace, persist:Error?> workspacesStream = self.queryWorkspacesStream();
         stream<Building, persist:Error?> buildingsStream = self.queryBuildingsStream();
         error? unionResult = from record {} 'object in workspacesStream
@@ -499,9 +499,9 @@ public isolated client class GoogleSheetsRainierClient {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("Workspace", key);
     }
 
     private isolated function queryWorkspacesEmployees(record {} value, string[] fields) returns record {}[]|persist:Error {
@@ -522,7 +522,7 @@ public isolated client class GoogleSheetsRainierClient {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneOrderItems(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneOrderItems(anydata key) returns record {}|persist:Error {
         stream<OrderItem, persist:Error?> orderItemsStream = self.queryOrderItemsStream();
         error? unionResult = from record {} 'object in orderItemsStream
             where persist:getKey('object, ["orderId", "itemId"]) == key
@@ -532,9 +532,9 @@ public isolated client class GoogleSheetsRainierClient {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("OrderItem", key);
     }
 
     private isolated function queryEmployeesStream(EmployeeTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {

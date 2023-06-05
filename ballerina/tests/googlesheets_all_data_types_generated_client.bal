@@ -135,7 +135,7 @@ public isolated client class GoogleSheetsRainierClientAllDataType {
         return outputArray.toStream();
     }
 
-    private isolated function queryOneOrderitemextendeds(anydata key) returns record {}|persist:NotFoundError {
+    private isolated function queryOneOrderitemextendeds(anydata key) returns record {}|persist:Error {
         stream<OrderItemExtended, persist:Error?> orderitemextendedsStream = self.queryOrderitemextendedsStream();
         error? unionResult = from record {} 'object in orderitemextendedsStream
             where persist:getKey('object, ["orderId", "itemId"]) == key
@@ -145,9 +145,9 @@ public isolated client class GoogleSheetsRainierClientAllDataType {
                 };
             };
         if unionResult is error {
-            return <persist:NotFoundError>error(unionResult.message());
+            return error persist:Error(unionResult.message());
         }
-        return <persist:NotFoundError>error("Invalid key: " + key.toString());
+        return persist:getNotFoundError("OrderItemExtended", key);
     }
 
     private isolated function queryOrderitemextendedsStream(OrderItemExtendedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
