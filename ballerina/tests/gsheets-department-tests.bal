@@ -23,7 +23,7 @@ import ballerina/persist;
     enable: false
 }
 function gsheetsDepartmentCreateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     string[] deptNos = check rainierClient->/departments.post([department1]);
     test:assertEquals(deptNos, [department1.deptNo]);
 
@@ -37,7 +37,7 @@ function gsheetsDepartmentCreateTest() returns error? {
     enable: false
 }
 function gsheetsDepartmentCreateTest2() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     string[] deptNos = check rainierClient->/departments.post([department2, department3]);
 
     test:assertEquals(deptNos, [department2.deptNo, department3.deptNo]);
@@ -55,7 +55,7 @@ function gsheetsDepartmentCreateTest2() returns error? {
     enable: false
 }
 function gsheetsDepartmentReadOneTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Department departmentRetrieved = check rainierClient->/departments/[department1.deptNo].get();
     test:assertEquals(departmentRetrieved, department1);
 }
@@ -66,10 +66,10 @@ function gsheetsDepartmentReadOneTest() returns error? {
     enable: false
 }
 function gsheetsDepartmentReadOneTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Department|error departmentRetrieved = rainierClient->/departments/["invalid-department-id"].get();
     if departmentRetrieved is persist:NotFoundError {
-        test:assertEquals(departmentRetrieved.message(), "Invalid key: invalid-department-id");
+        test:assertEquals(departmentRetrieved.message(), "A record with the key 'invalid-department-id' does not exist for the entity 'Department'.");
     } else {
         test:assertFail("NotFoundError expected.");
     }
@@ -81,7 +81,7 @@ function gsheetsDepartmentReadOneTestNegative() returns error? {
     enable: false
 }
 function gsheetsDepartmentReadManyTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     stream<Department, error?> departmentStream = rainierClient->/departments.get();
     Department[] departments = check from Department department in departmentStream
         select department;
@@ -95,7 +95,7 @@ function gsheetsDepartmentReadManyTest() returns error? {
     enable: false
 }
 function gsheetsDepartmentReadManyTestDependent() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     stream<DepartmentInfo2, persist:Error?> departmentStream = rainierClient->/departments.get();
     DepartmentInfo2[] departments = check from DepartmentInfo2 department in departmentStream
         select department;
@@ -113,7 +113,7 @@ function gsheetsDepartmentReadManyTestDependent() returns error? {
     enable: false
 }
 function gsheetsDepartmentUpdateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Department department = check rainierClient->/departments/[department1.deptNo].put({
         deptName: "Finance & Legalities"
     });
@@ -130,13 +130,13 @@ function gsheetsDepartmentUpdateTest() returns error? {
     enable: false
 }
 function gsheetsDepartmentUpdateTestNegative1() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Department|error department = rainierClient->/departments/["invalid-department-id"].put({
         deptName: "Human Resources"
     });
 
     if department is persist:NotFoundError {
-        test:assertEquals(department.message(), "Not found: invalid-department-id");
+        test:assertEquals(department.message(), "A record with the key 'invalid-department-id' does not exist for the entity 'Department'.");
     } else {
         test:assertFail("NotFoundError expected.");
     }
@@ -148,7 +148,7 @@ function gsheetsDepartmentUpdateTestNegative1() returns error? {
     enable: false
 }
 function gsheetsDepartmentDeleteTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Department department = check rainierClient->/departments/[department1.deptNo].delete();
     test:assertEquals(department, updatedDepartment1);
 
@@ -165,11 +165,11 @@ function gsheetsDepartmentDeleteTest() returns error? {
     enable: false
 }
 function gsheetsDepartmentDeleteTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Department|error department = rainierClient->/departments/[department1.deptNo].delete();
 
     if department is persist:NotFoundError {
-        test:assertEquals(department.message(), string `Invalid key: department-1`);
+        test:assertEquals(department.message(), "A record with the key 'department-1' does not exist for the entity 'Department'.");
     } else {
         test:assertFail("NotFoundError expected.");
     }

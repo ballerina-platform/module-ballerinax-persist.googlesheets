@@ -23,12 +23,12 @@ import ballerina/persist;
     enable: false
 }
 function gsheetsEmployeeCreateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     string[] empNos = check rainierClient->/employees.post([employee1]);
     test:assertEquals(empNos, [employee1.empNo]);
 
     Employee employeeRetrieved = check rainierClient->/employees/[employee1.empNo].get();
-    test:assertEquals(employeeRetrieved, employee1); 
+    test:assertEquals(employeeRetrieved, employee1);
 }
 
 @test:Config {
@@ -37,7 +37,7 @@ function gsheetsEmployeeCreateTest() returns error? {
     enable: false
 }
 function gsheetsEmployeeCreateTest2() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     string[] empNos = check rainierClient->/employees.post([employee2, employee3]);
 
     test:assertEquals(empNos, [employee2.empNo, employee3.empNo]);
@@ -46,7 +46,7 @@ function gsheetsEmployeeCreateTest2() returns error? {
     test:assertEquals(employeeRetrieved, employee2);
 
     employeeRetrieved = check rainierClient->/employees/[employee3.empNo].get();
-    test:assertEquals(employeeRetrieved, employee3);  
+    test:assertEquals(employeeRetrieved, employee3);
 }
 
 @test:Config {
@@ -55,9 +55,9 @@ function gsheetsEmployeeCreateTest2() returns error? {
     enable: false
 }
 function gsheetsEmployeeReadOneTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Employee employeeRetrieved = check rainierClient->/employees/[employee1.empNo].get();
-    test:assertEquals(employeeRetrieved, employee1);   
+    test:assertEquals(employeeRetrieved, employee1);
 }
 
 @test:Config {
@@ -66,13 +66,13 @@ function gsheetsEmployeeReadOneTest() returns error? {
     enable: false
 }
 function gsheetsEmployeeReadOneTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Employee|error employeeRetrieved = rainierClient->/employees/["invalid-employee-id"].get();
     if employeeRetrieved is persist:NotFoundError {
-        test:assertEquals(employeeRetrieved.message(), "Invalid key: invalid-employee-id");
+        test:assertEquals(employeeRetrieved.message(), "A record with the key 'invalid-employee-id' does not exist for the entity 'Employee'.");
     } else {
         test:assertFail("NotFoundError expected.");
-    }   
+    }
 }
 
 @test:Config {
@@ -81,12 +81,12 @@ function gsheetsEmployeeReadOneTestNegative() returns error? {
     enable: false
 }
 function gsheetsEmployeeReadManyTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     stream<Employee, persist:Error?> employeeStream = rainierClient->/employees.get();
     Employee[] employees = check from Employee employee in employeeStream
         select employee;
 
-    test:assertEquals(employees, [employee1, employee2, employee3]);   
+    test:assertEquals(employees, [employee1, employee2, employee3]);
 }
 
 @test:Config {
@@ -95,7 +95,7 @@ function gsheetsEmployeeReadManyTest() returns error? {
     enable: false
 }
 function gsheetsEmployeeReadManyDependentTest1() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     stream<EmployeeName, persist:Error?> employeeStream = rainierClient->/employees.get();
     EmployeeName[] employees = check from EmployeeName employee in employeeStream
         select employee;
@@ -104,7 +104,7 @@ function gsheetsEmployeeReadManyDependentTest1() returns error? {
         {firstName: employee1.firstName, lastName: employee1.lastName},
         {firstName: employee2.firstName, lastName: employee2.lastName},
         {firstName: employee3.firstName, lastName: employee3.lastName}
-    ]);   
+    ]);
 }
 
 @test:Config {
@@ -113,7 +113,7 @@ function gsheetsEmployeeReadManyDependentTest1() returns error? {
     enable: false
 }
 function gsheetsEmployeeReadManyDependentTest2() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     stream<EmployeeInfo2, persist:Error?> employeeStream = rainierClient->/employees.get();
     EmployeeInfo2[] employees = check from EmployeeInfo2 employee in employeeStream
         select employee;
@@ -122,7 +122,7 @@ function gsheetsEmployeeReadManyDependentTest2() returns error? {
         {empNo: employee1.empNo, birthDate: employee1.birthDate, departmentDeptNo: employee1.departmentDeptNo, workspaceWorkspaceId: employee1.workspaceWorkspaceId},
         {empNo: employee2.empNo, birthDate: employee2.birthDate, departmentDeptNo: employee2.departmentDeptNo, workspaceWorkspaceId: employee2.workspaceWorkspaceId},
         {empNo: employee3.empNo, birthDate: employee3.birthDate, departmentDeptNo: employee3.departmentDeptNo, workspaceWorkspaceId: employee3.workspaceWorkspaceId}
-    ]);   
+    ]);
 }
 
 @test:Config {
@@ -131,7 +131,7 @@ function gsheetsEmployeeReadManyDependentTest2() returns error? {
     enable: false
 }
 function gsheetsEmployeeUpdateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Employee employee = check rainierClient->/employees/[employee1.empNo].put({
         lastName: "Jones",
         departmentDeptNo: "department-3",
@@ -141,7 +141,7 @@ function gsheetsEmployeeUpdateTest() returns error? {
     test:assertEquals(employee, updatedEmployee1);
 
     Employee employeeRetrieved = check rainierClient->/employees/[employee1.empNo].get();
-    test:assertEquals(employeeRetrieved, updatedEmployee1);   
+    test:assertEquals(employeeRetrieved, updatedEmployee1);
 }
 
 @test:Config {
@@ -150,13 +150,13 @@ function gsheetsEmployeeUpdateTest() returns error? {
     enable: false
 }
 function gsheetsEmployeeUpdateTestNegative1() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Employee|error employee = rainierClient->/employees/["invalid-employee-id"].put({
         lastName: "Jones"
     });
 
     if employee is persist:NotFoundError {
-        test:assertEquals(employee.message(), "Not found: invalid-employee-id");
+        test:assertEquals(employee.message(), "A record with the key 'invalid-employee-id' does not exist for the entity 'Employee'.");
     } else {
         test:assertFail("NotFoundError expected.");
     }
@@ -168,7 +168,7 @@ function gsheetsEmployeeUpdateTestNegative1() returns error? {
     enable: false
 }
 function gsheetsEmployeeDeleteTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Employee employee = check rainierClient->/employees/[employee1.empNo].delete();
     test:assertEquals(employee, updatedEmployee1);
 
@@ -185,10 +185,11 @@ function gsheetsEmployeeDeleteTest() returns error? {
     enable: false
 }
 function gsheetsEmployeeDeleteTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    GoogleSheetsRainierClient rainierClient = check new ();
     Employee|error employee = rainierClient->/employees/[employee1.empNo].delete();
 
     if employee is persist:NotFoundError {
+        test:assertEquals(employee.message(), "A record with the key 'employee-1' does not exist for the entity 'Employee'.");
         test:assertEquals(employee.message(), string `Invalid key: employee-1`);
     } else {
         test:assertFail("NotFoundError expected.");
