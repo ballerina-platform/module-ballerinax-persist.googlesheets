@@ -18,7 +18,6 @@ import ballerina/time;
 import ballerina/test;
 import ballerinax/googleapis.sheets;
 import ballerina/os;
-import ballerina/io;
 
 configurable string & readonly refreshToken = os:getEnv("REFRESH_TOKEN");
 configurable string & readonly clientId = os:getEnv("CLIENT_ID");
@@ -27,7 +26,6 @@ configurable string & readonly spreadsheetId = ?;
 
 @test:BeforeSuite
 function initSpreadsheet() returns error? {
-    io:println("SpreadSheetID :" + spreadsheetId);
     sheets:ConnectionConfig spreadsheetConfig = {
         auth: {
             clientId: clientId,
@@ -53,9 +51,11 @@ function initSpreadsheet() returns error? {
     _ = check spreadsheetClient->appendValue(spreadSheet.spreadsheetId, ["deptNo", "deptName"], {sheetName: "Department", startIndex: "A1", endIndex: "C1"}, "USER_ENTERED");
     _ = check spreadsheetClient->appendValue(spreadSheet.spreadsheetId, ["orderId", "itemId", "CustomerId", "paid", "ammountPaid", "ammountPaidDecimal", "arivalTimeCivil", "arivalTimeUtc", "arivalTimeDate", "arivalTimeTimeOfDay", "orderType"], {sheetName: "OrderItemExtended", startIndex: "A1", endIndex: "L1"}, "USER_ENTERED");
     rainierClient = check new ();
+    rainierClientAllDataType =  check new ();
 }
 
 GoogleSheetsRainierClient rainierClient =  check new ();
+GoogleSheetsRainierClientAllDataType rainierClientAllDataType =  check new ();
 
 OrderItemExtended orderItemExtended1 = {
     orderId: "order-1",
