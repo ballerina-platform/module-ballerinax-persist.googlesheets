@@ -18,14 +18,16 @@ import ballerina/time;
 import ballerina/test;
 import ballerinax/googleapis.sheets;
 import ballerina/os;
+import ballerina/io;
 
 configurable string & readonly refreshToken = os:getEnv("REFRESH_TOKEN");
 configurable string & readonly clientId = os:getEnv("CLIENT_ID");
 configurable string & readonly clientSecret = os:getEnv("CLIENT_SECRET");
-configurable string & readonly spreadsheetId = os:getEnv("SPREADSHEET_ID");
+configurable string & readonly spreadsheetId = ?;
 
 @test:BeforeSuite
 function initSpreadsheet() returns error? {
+    io:println("SpreadSheetID :" + spreadsheetId);
     sheets:ConnectionConfig spreadsheetConfig = {
         auth: {
             clientId: clientId,
