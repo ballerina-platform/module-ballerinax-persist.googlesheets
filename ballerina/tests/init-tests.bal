@@ -17,6 +17,7 @@
 import ballerina/time;
 import ballerina/test;
 import ballerinax/googleapis.sheets;
+import ballerina/os;
 
 configurable string & readonly refreshToken = os:getEnv("REFRESH_TOKEN");
 configurable string & readonly clientId = os:getEnv("CLIENT_ID");
