@@ -16,6 +16,7 @@
 
 import ballerina/test;
 import ballerina/persist;
+import ballerina/lang.runtime;
 
 @test:Config {
     groups: ["employee", "google-sheets"],
@@ -23,6 +24,7 @@ import ballerina/persist;
     enable: true
 }
 function gsheetsEmployeeCreateTest() returns error? {
+    runtime:sleep(15);
     string[] empNos = check rainierClient->/employees.post([employee1]);
     test:assertEquals(empNos, [employee1.empNo]);
 

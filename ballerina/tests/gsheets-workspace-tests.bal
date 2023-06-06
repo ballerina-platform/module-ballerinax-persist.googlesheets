@@ -16,6 +16,7 @@
 
 import ballerina/test;
 import ballerina/persist;
+import ballerina/lang.runtime;
 
 @test:Config {
     groups: ["workspace", "google-sheets"],
@@ -23,6 +24,7 @@ import ballerina/persist;
     enable: true
 }
 function gsheetsWorkspaceCreateTest() returns error? {
+    runtime:sleep(15);
     string[] workspaceIds = check rainierClient->/workspaces.post([workspace1]);
     test:assertEquals(workspaceIds, [workspace1.workspaceId]);
 

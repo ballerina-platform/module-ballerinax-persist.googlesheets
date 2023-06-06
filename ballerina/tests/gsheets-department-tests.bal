@@ -16,6 +16,7 @@
 
 import ballerina/test;
 import ballerina/persist;
+import ballerina/lang.runtime;
 
 @test:Config {
     groups: ["department", "google-sheets"],
@@ -23,6 +24,7 @@ import ballerina/persist;
     enable: true
 }
 function gsheetsDepartmentCreateTest() returns error? {
+    runtime:sleep(15);
     string[] deptNos = check rainierClient->/departments.post([department1]);
     test:assertEquals(deptNos, [department1.deptNo]);
 

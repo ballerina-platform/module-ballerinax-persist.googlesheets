@@ -16,12 +16,15 @@
 
 import ballerina/test;
 import ballerina/persist;
+import ballerina/lang.runtime;
+
 @test:Config {
     groups: ["building", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyDeleteTestNegative],
     enable: true
 }
 function gsheetsBuildingCreateTest() returns error? {
+    runtime:sleep(15);
     string[] buildingCodes = check rainierClient->/buildings.post([building1]);
     test:assertEquals(buildingCodes, [building1.buildingCode]);
 

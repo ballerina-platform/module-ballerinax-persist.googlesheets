@@ -16,6 +16,7 @@
 
 import ballerina/test;
 import ballerina/persist;
+import ballerina/lang.runtime;
 
 @test:Config {
     groups: ["associations", "google-sheets"],
@@ -23,6 +24,7 @@ import ballerina/persist;
     enable: true
 }
 function gsheetsEmployeeRelationsTest() returns error? {
+    runtime:sleep(15);
     Employee employee21 = {
         empNo: "employee-21",
         firstName: "Tom",

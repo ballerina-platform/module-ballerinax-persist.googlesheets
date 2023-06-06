@@ -16,6 +16,7 @@
 
 import ballerina/test;
 import ballerina/persist;
+import ballerina/lang.runtime;
 
 OrderItem orderItem1 = {
     orderId: "order-1",
@@ -43,6 +44,7 @@ OrderItem orderItem2Updated = {
     enable: true
 }
 function gsheetsCompositeKeyCreateTest() returns error? {
+    runtime:sleep(15);
     [string, string][] ids = check rainierClient->/orderitems.post([orderItem1, orderItem2]);
     test:assertEquals(ids, [[orderItem1.orderId, orderItem1.itemId], [orderItem2.orderId, orderItem2.itemId]]);
 
