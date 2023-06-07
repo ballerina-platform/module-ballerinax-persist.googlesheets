@@ -38,7 +38,6 @@ function gsheetsEmployeeCreateTest() returns error? {
     enable: true
 }
 function gsheetsEmployeeCreateTest2() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     string[] empNos = check rainierClient->/employees.post([employee2, employee3]);
 
     test:assertEquals(empNos, [employee2.empNo, employee3.empNo]);
@@ -56,7 +55,6 @@ function gsheetsEmployeeCreateTest2() returns error? {
     enable: true
 }
 function gsheetsEmployeeReadOneTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Employee employeeRetrieved = check rainierClient->/employees/[employee1.empNo].get();
     test:assertEquals(employeeRetrieved, employee1);
 }
@@ -67,7 +65,6 @@ function gsheetsEmployeeReadOneTest() returns error? {
     enable: true
 }
 function gsheetsEmployeeReadOneTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Employee|error employeeRetrieved = rainierClient->/employees/["invalid-employee-id"].get();
     if employeeRetrieved is persist:NotFoundError {
         test:assertEquals(employeeRetrieved.message(), "A record with the key 'invalid-employee-id' does not exist for the entity 'Employee'.");
@@ -82,7 +79,6 @@ function gsheetsEmployeeReadOneTestNegative() returns error? {
     enable: true
 }
 function gsheetsEmployeeReadManyTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     stream<Employee, persist:Error?> employeeStream = rainierClient->/employees.get();
     Employee[] employees = check from Employee employee in employeeStream
         select employee;
@@ -96,7 +92,6 @@ function gsheetsEmployeeReadManyTest() returns error? {
     enable: true
 }
 function gsheetsEmployeeReadManyDependentTest1() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     stream<EmployeeName, persist:Error?> employeeStream = rainierClient->/employees.get();
     EmployeeName[] employees = check from EmployeeName employee in employeeStream
         select employee;

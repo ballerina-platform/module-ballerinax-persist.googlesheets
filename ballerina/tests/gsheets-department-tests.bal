@@ -38,7 +38,6 @@ function gsheetsDepartmentCreateTest() returns error? {
     enable: true
 }
 function gsheetsDepartmentCreateTest2() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     string[] deptNos = check rainierClient->/departments.post([department2, department3]);
 
     test:assertEquals(deptNos, [department2.deptNo, department3.deptNo]);
@@ -56,7 +55,6 @@ function gsheetsDepartmentCreateTest2() returns error? {
     enable: true
 }
 function gsheetsDepartmentReadOneTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Department departmentRetrieved = check rainierClient->/departments/[department1.deptNo].get();
     test:assertEquals(departmentRetrieved, department1);
 }
@@ -67,7 +65,6 @@ function gsheetsDepartmentReadOneTest() returns error? {
     enable: true
 }
 function gsheetsDepartmentReadOneTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Department|error departmentRetrieved = rainierClient->/departments/["invalid-department-id"].get();
     if departmentRetrieved is persist:NotFoundError {
         test:assertEquals(departmentRetrieved.message(), "A record with the key 'invalid-department-id' does not exist for the entity 'Department'.");
@@ -82,7 +79,6 @@ function gsheetsDepartmentReadOneTestNegative() returns error? {
     enable: true
 }
 function gsheetsDepartmentReadManyTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     stream<Department, error?> departmentStream = rainierClient->/departments.get();
     Department[] departments = check from Department department in departmentStream
         select department;
@@ -96,7 +92,6 @@ function gsheetsDepartmentReadManyTest() returns error? {
     enable: true
 }
 function gsheetsDepartmentReadManyTestDependent() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     stream<DepartmentInfo2, persist:Error?> departmentStream = rainierClient->/departments.get();
     DepartmentInfo2[] departments = check from DepartmentInfo2 department in departmentStream
         select department;
@@ -114,7 +109,6 @@ function gsheetsDepartmentReadManyTestDependent() returns error? {
     enable: true
 }
 function gsheetsDepartmentUpdateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Department department = check rainierClient->/departments/[department1.deptNo].put({
         deptName: "Finance & Legalities"
     });
@@ -131,7 +125,6 @@ function gsheetsDepartmentUpdateTest() returns error? {
     enable: true
 }
 function gsheetsDepartmentUpdateTestNegative1() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Department|error department = rainierClient->/departments/["invalid-department-id"].put({
         deptName: "Human Resources"
     });
@@ -149,7 +142,6 @@ function gsheetsDepartmentUpdateTestNegative1() returns error? {
     enable: true
 }
 function gsheetsDepartmentDeleteTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Department department = check rainierClient->/departments/[department1.deptNo].delete();
     test:assertEquals(department, updatedDepartment1);
 
@@ -166,7 +158,6 @@ function gsheetsDepartmentDeleteTest() returns error? {
     enable: true
 }
 function gsheetsDepartmentDeleteTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Department|error department = rainierClient->/departments/[department1.deptNo].delete();
 
     if department is persist:NotFoundError {

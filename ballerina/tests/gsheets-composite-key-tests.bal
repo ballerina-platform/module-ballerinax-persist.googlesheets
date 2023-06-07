@@ -61,7 +61,6 @@ function gsheetsCompositeKeyCreateTest() returns error? {
     enable: true
 }
 function gsheetsCmpositeKeyCreateTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     [string, string][]|error ids = rainierClient->/orderitems.post([orderItem1]);
     if ids is persist:AlreadyExistsError {
         test:assertEquals(ids.message(), "A record with the key '{\"orderId\":\"order-1\",\"itemId\":\"item-1\"}' already exists for the entity 'OrderItem'.");
@@ -76,7 +75,6 @@ function gsheetsCmpositeKeyCreateTestNegative() returns error? {
     enable: true
 }
 function gsheetsCompositeKeyReadManyTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     stream<OrderItem, error?> orderItemStream = rainierClient->/orderitems.get();
     OrderItem[] orderitem = check from OrderItem orderItem in orderItemStream
         select orderItem;
@@ -90,7 +88,6 @@ function gsheetsCompositeKeyReadManyTest() returns error? {
     enable: true
 }
 function gsheetsCompositeKeyReadOneTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     OrderItem orderItem = check rainierClient->/orderitems/[orderItem1.orderId]/[orderItem1.itemId].get();
     test:assertEquals(orderItem, orderItem1);
 }
@@ -101,7 +98,6 @@ function gsheetsCompositeKeyReadOneTest() returns error? {
     enable: true
 }
 function gsheetsCompositeKeyReadOneTest2() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     OrderItem orderItem = check rainierClient->/orderitems/[orderItem1.orderId]/[orderItem1.itemId].get();
     test:assertEquals(orderItem, orderItem1);
 }
@@ -112,7 +108,6 @@ function gsheetsCompositeKeyReadOneTest2() returns error? {
     enable: true
 }
 function gsheetsCompositeKeyReadOneTestNegative1() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     OrderItem|error orderItem = rainierClient->/orderitems/["invalid-order-id"]/[orderItem1.itemId].get();
     if orderItem is persist:NotFoundError {
         test:assertEquals(orderItem.message(), "A record with the key '{\"orderId\":\"invalid-order-id\",\"itemId\":\"item-1\"}' does not exist for the entity 'OrderItem'.");
@@ -127,7 +122,6 @@ function gsheetsCompositeKeyReadOneTestNegative1() returns error? {
     enable: true
 }
 function gsheetsCompositeKeyReadOneTestNegative2() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     OrderItem|error orderItem = rainierClient->/orderitems/[orderItem1.orderId]/["invalid-item-id"].get();
     if orderItem is persist:NotFoundError {
         test:assertEquals(orderItem.message(), "A record with the key '{\"orderId\":\"order-1\",\"itemId\":\"invalid-item-id\"}' does not exist for the entity 'OrderItem'.");
@@ -142,7 +136,6 @@ function gsheetsCompositeKeyReadOneTestNegative2() returns error? {
     enable: true
 }
 function gsheetsCompositeKeyUpdateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     OrderItem orderItem = check rainierClient->/orderitems/[orderItem2.orderId]/[orderItem2.itemId].put({
         quantity: orderItem2Updated.quantity,
         notes: orderItem2Updated.notes
@@ -159,7 +152,6 @@ function gsheetsCompositeKeyUpdateTest() returns error? {
     enable: true
 }
 function gsheetsCompositeKeyUpdateTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     OrderItem|error orderItem = rainierClient->/orderitems/[orderItem1.orderId]/[orderItem2.itemId].put({
         quantity: 239,
         notes: "updated notes"
@@ -177,7 +169,6 @@ function gsheetsCompositeKeyUpdateTestNegative() returns error? {
     enable: true
 }
 function gsheetsCompositeKeyDeleteTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     OrderItem orderItem = check rainierClient->/orderitems/[orderItem2.orderId]/[orderItem2.itemId].delete();
     test:assertEquals(orderItem, orderItem2Updated);
 
@@ -191,7 +182,6 @@ function gsheetsCompositeKeyDeleteTest() returns error? {
     enable: true
 }
 function gsheetsCompositeKeyDeleteTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     OrderItem|error orderItem = rainierClient->/orderitems/["invalid-order-id"]/[orderItem2.itemId].delete();
     if orderItem is persist:NotFoundError {
         test:assertEquals(orderItem.message(), "A record with the key '{\"orderId\":\"invalid-order-id\",\"itemId\":\"item-2\"}' does not exist for the entity 'OrderItem'.");

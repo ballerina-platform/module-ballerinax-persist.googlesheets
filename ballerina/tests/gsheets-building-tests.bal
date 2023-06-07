@@ -38,7 +38,6 @@ function gsheetsBuildingCreateTest() returns error? {
     enable: true
 }
 function gsheetsBuildingCreateTest2() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     string[] buildingCodes = check rainierClient->/buildings.post([building2, building3]);
 
     test:assertEquals(buildingCodes, [building2.buildingCode, building3.buildingCode]);
@@ -56,7 +55,6 @@ function gsheetsBuildingCreateTest2() returns error? {
     enable: true
 }
 function gsheetsBuildingReadOneTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Building buildingRetrieved = check rainierClient->/buildings/[building1.buildingCode].get();
     test:assertEquals(buildingRetrieved, building1);
 }
@@ -67,7 +65,6 @@ function gsheetsBuildingReadOneTest() returns error? {
     enable: true
 }
 function gsheetsBuildingReadOneTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Building|error buildingRetrieved = rainierClient->/buildings/["invalid-building-code"].get();
     if buildingRetrieved is persist:NotFoundError {
         test:assertEquals(buildingRetrieved.message(), "A record with the key 'invalid-building-code' does not exist for the entity 'Building'.");
@@ -82,7 +79,6 @@ function gsheetsBuildingReadOneTestNegative() returns error? {
     enable: true
 }
 function gsheetsBuildingReadManyTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     stream<Building, error?> buildingStream = rainierClient->/buildings.get();
     Building[] buildings = check from Building building in buildingStream
         select building;
@@ -95,7 +91,6 @@ function gsheetsBuildingReadManyTest() returns error? {
     enable: true
 }
 function gsheetsBuildingReadManyDependentTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     stream<BuildingInfo2, error?> buildingStream = rainierClient->/buildings.get();
     BuildingInfo2[] buildings = check from BuildingInfo2 building in buildingStream
         select building;
@@ -112,7 +107,6 @@ function gsheetsBuildingReadManyDependentTest() returns error? {
     enable: true
 }
 function gsheetsBuildingUpdateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Building building = check rainierClient->/buildings/[building1.buildingCode].put({
         city: "Galle",
         state: "Southern Province",
@@ -130,7 +124,6 @@ function gsheetsBuildingUpdateTest() returns error? {
     enable: true
 }
 function gsheetsBuildingUpdateTestNegative1() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Building|error building = rainierClient->/buildings/["invalid-building-code"].put({
         city: "Galle",
         state: "Southern Province",
@@ -149,7 +142,6 @@ function gsheetsBuildingUpdateTestNegative1() returns error? {
     enable: true
 }
 function gsheetsBuildingDeleteTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Building building = check rainierClient->/buildings/[building1.buildingCode].delete();
     test:assertEquals(building, updatedBuilding1);
     stream<Building, error?> buildingStream = rainierClient->/buildings.get();
@@ -165,7 +157,6 @@ function gsheetsBuildingDeleteTest() returns error? {
     enable: true
 }
 function gsheetsBuildingDeleteTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Building|error building = rainierClient->/buildings/[building1.buildingCode].delete();
     if building is error {
         test:assertEquals(building.message(), "A record with the key 'building1' does not exist for the entity 'Building'.");
