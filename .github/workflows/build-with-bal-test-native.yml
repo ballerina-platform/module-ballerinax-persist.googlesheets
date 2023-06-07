@@ -25,19 +25,16 @@ on:
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
     cancel-in-progress: true
-    
-env:
-  CLIENT_ID: ${{ secrets.CLIENT_ID }}
-  CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-  REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
 
 jobs:
   call_stdlib_workflow:
     name: Run StdLib Workflow
     if: ${{ github.event_name != 'schedule' || (github.event_name == 'schedule' && github.repository_owner == 'ballerina-platform') }}
-    uses: ballerina-platform/ballerina-standard-library/.github/workflows/build-with-bal-test-native-template.yml@main
+    uses: TharmiganK/ballerina-standard-library/.github/workflows/build-with-bal-test-native-template.yml@main
     with:
       lang_tag: ${{ inputs.lang_tag }}
       lang_version: ${{ inputs.lang_version }}
       native_image_options: '-J-Xmx7G ${{ inputs.native_image_options }}'
       additional_windows_build_flags: '-x test'
+      additional_secrets: 'CLIENT_ID CLIENT_SECRET REFRESH_TOKEN'
+    secrets: inherit
