@@ -239,10 +239,10 @@ public isolated client class GoogleSheetsClient {
         if rows is error {
             return <persist:Error>error(rows.message());
         }
+
         if rows.length() == 0 {
             return persist:getNotFoundError(self.entityName, key);
-        }
-        else if rows.length() > 1 {
+        } else if rows.length() > 1 {
             return <persist:Error>error(string `Multiple elements found for given key: ${key.toString()}`);
         }
         foreach string entityKey in entityKeys {
@@ -256,9 +256,7 @@ public isolated client class GoogleSheetsClient {
                 } else if (key is int|string|decimal|float) {
                     values.push(key);
                 }
-            }
-
-            else if !updateRecord.hasKey(entityKey) && self.keyFields.indexOf(entityKey) == () {
+            } else if !updateRecord.hasKey(entityKey) && self.keyFields.indexOf(entityKey) == () {
                 int indexOfKey = <int>self.fieldMetadata.keys().indexOf(entityKey, 0);
                 string dataType = self.dataTypes.get(entityKey).toString();
                 if dataType == "boolean" || dataType == "int" || dataType == "float" || dataType == "decimal" {
@@ -267,9 +265,7 @@ public isolated client class GoogleSheetsClient {
                         return <persist:Error>error(value.message());
                     }
                     values.push(value);
-                }
-
-                else {
+                } else {
                     values.push(rows[0].values[indexOfKey]);
                 }
             } else {

@@ -64,7 +64,6 @@ function gsheetsCmpositeKeyCreateTestNegative() returns error? {
     [string, string][]|error ids = rainierClient->/orderitems.post([orderItem1]);
     if ids is persist:AlreadyExistsError {
         test:assertEquals(ids.message(), "A record with the key '{\"orderId\":\"order-1\",\"itemId\":\"item-1\"}' already exists for the entity 'OrderItem'.");
-        test:assertEquals(ids.message(), "Duplicate key: [\"order-1\",\"item-1\"]");
     } else {
         test:assertFail("AlreadyExistsError expected");
     }
