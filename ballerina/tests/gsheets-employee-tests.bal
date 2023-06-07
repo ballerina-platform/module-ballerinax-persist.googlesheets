@@ -29,7 +29,7 @@ function gsheetsEmployeeCreateTest() returns error? {
     test:assertEquals(empNos, [employee1.empNo]);
 
     Employee employeeRetrieved = check rainierClient->/employees/[employee1.empNo].get();
-    test:assertEquals(employeeRetrieved, employee1); 
+    test:assertEquals(employeeRetrieved, employee1);
 }
 
 @test:Config {
@@ -46,7 +46,7 @@ function gsheetsEmployeeCreateTest2() returns error? {
     test:assertEquals(employeeRetrieved, employee2);
 
     employeeRetrieved = check rainierClient->/employees/[employee3.empNo].get();
-    test:assertEquals(employeeRetrieved, employee3);  
+    test:assertEquals(employeeRetrieved, employee3);
 }
 
 @test:Config {
@@ -56,7 +56,7 @@ function gsheetsEmployeeCreateTest2() returns error? {
 }
 function gsheetsEmployeeReadOneTest() returns error? {
     Employee employeeRetrieved = check rainierClient->/employees/[employee1.empNo].get();
-    test:assertEquals(employeeRetrieved, employee1);   
+    test:assertEquals(employeeRetrieved, employee1);
 }
 
 @test:Config {
@@ -67,10 +67,10 @@ function gsheetsEmployeeReadOneTest() returns error? {
 function gsheetsEmployeeReadOneTestNegative() returns error? {
     Employee|error employeeRetrieved = rainierClient->/employees/["invalid-employee-id"].get();
     if employeeRetrieved is persist:NotFoundError {
-        test:assertEquals(employeeRetrieved.message(), "Invalid key: invalid-employee-id");
+        test:assertEquals(employeeRetrieved.message(), "A record with the key 'invalid-employee-id' does not exist for the entity 'Employee'.");
     } else {
         test:assertFail("NotFoundError expected.");
-    }   
+    }
 }
 
 @test:Config {
@@ -83,7 +83,7 @@ function gsheetsEmployeeReadManyTest() returns error? {
     Employee[] employees = check from Employee employee in employeeStream
         select employee;
 
-    test:assertEquals(employees, [employee1, employee2, employee3]);   
+    test:assertEquals(employees, [employee1, employee2, employee3]);
 }
 
 @test:Config {
@@ -100,7 +100,7 @@ function gsheetsEmployeeReadManyDependentTest1() returns error? {
         {firstName: employee1.firstName, lastName: employee1.lastName},
         {firstName: employee2.firstName, lastName: employee2.lastName},
         {firstName: employee3.firstName, lastName: employee3.lastName}
-    ]);   
+    ]);
 }
 
 @test:Config {
@@ -117,7 +117,7 @@ function gsheetsEmployeeReadManyDependentTest2() returns error? {
         {empNo: employee1.empNo, birthDate: employee1.birthDate, departmentDeptNo: employee1.departmentDeptNo, workspaceWorkspaceId: employee1.workspaceWorkspaceId},
         {empNo: employee2.empNo, birthDate: employee2.birthDate, departmentDeptNo: employee2.departmentDeptNo, workspaceWorkspaceId: employee2.workspaceWorkspaceId},
         {empNo: employee3.empNo, birthDate: employee3.birthDate, departmentDeptNo: employee3.departmentDeptNo, workspaceWorkspaceId: employee3.workspaceWorkspaceId}
-    ]);   
+    ]);
 }
 
 @test:Config {
@@ -135,7 +135,7 @@ function gsheetsEmployeeUpdateTest() returns error? {
     test:assertEquals(employee, updatedEmployee1);
 
     Employee employeeRetrieved = check rainierClient->/employees/[employee1.empNo].get();
-    test:assertEquals(employeeRetrieved, updatedEmployee1);   
+    test:assertEquals(employeeRetrieved, updatedEmployee1);
 }
 
 @test:Config {
@@ -149,7 +149,7 @@ function gsheetsEmployeeUpdateTestNegative1() returns error? {
     });
 
     if employee is persist:NotFoundError {
-        test:assertEquals(employee.message(), "Not found: invalid-employee-id");
+        test:assertEquals(employee.message(), "A record with the key 'invalid-employee-id' does not exist for the entity 'Employee'.");
     } else {
         test:assertFail("NotFoundError expected.");
     }
@@ -180,7 +180,7 @@ function gsheetsEmployeeDeleteTestNegative() returns error? {
     Employee|error employee = rainierClient->/employees/[employee1.empNo].delete();
 
     if employee is persist:NotFoundError {
-        test:assertEquals(employee.message(), string `Invalid key: employee-1`);
+        test:assertEquals(employee.message(), "A record with the key 'employee-1' does not exist for the entity 'Employee'.");
     } else {
         test:assertFail("NotFoundError expected.");
     }

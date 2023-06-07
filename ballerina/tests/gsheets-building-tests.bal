@@ -44,7 +44,7 @@ function gsheetsBuildingCreateTest2() returns error? {
 
     Building buildingRetrieved = check rainierClient->/buildings/[building2.buildingCode].get();
     test:assertEquals(buildingRetrieved, building2);
-    
+
     buildingRetrieved = check rainierClient->/buildings/[building3.buildingCode].get();
     test:assertEquals(buildingRetrieved, building3);
 }
@@ -67,7 +67,7 @@ function gsheetsBuildingReadOneTest() returns error? {
 function gsheetsBuildingReadOneTestNegative() returns error? {
     Building|error buildingRetrieved = rainierClient->/buildings/["invalid-building-code"].get();
     if buildingRetrieved is persist:NotFoundError {
-        test:assertEquals(buildingRetrieved.message(), "Invalid key: invalid-building-code");
+        test:assertEquals(buildingRetrieved.message(), "A record with the key 'invalid-building-code' does not exist for the entity 'Building'.");
     } else {
         test:assertFail("NotFoundError expected.");
     }
@@ -82,7 +82,7 @@ function gsheetsBuildingReadManyTest() returns error? {
     stream<Building, error?> buildingStream = rainierClient->/buildings.get();
     Building[] buildings = check from Building building in buildingStream
         select building;
-    test:assertEquals(buildings, [building1, building2, building3]); 
+    test:assertEquals(buildings, [building1, building2, building3]);
 }
 
 @test:Config {
@@ -98,7 +98,7 @@ function gsheetsBuildingReadManyDependentTest() returns error? {
         {city: building1.city, state: building1.state, country: building1.country, postalCode: building1.postalCode, 'type: building1.'type},
         {city: building2.city, state: building2.state, country: building2.country, postalCode: building2.postalCode, 'type: building2.'type},
         {city: building3.city, state: building3.state, country: building3.country, postalCode: building3.postalCode, 'type: building3.'type}
-    ]);   
+    ]);
 }
 
 @test:Config {
@@ -115,7 +115,7 @@ function gsheetsBuildingUpdateTest() returns error? {
     });
     test:assertEquals(building, updatedBuilding1);
     Building buildingRetrieved = check rainierClient->/buildings/[building1.buildingCode].get();
-    test:assertEquals(buildingRetrieved, updatedBuilding1);    
+    test:assertEquals(buildingRetrieved, updatedBuilding1);
 }
 
 @test:Config {
@@ -130,10 +130,10 @@ function gsheetsBuildingUpdateTestNegative1() returns error? {
         postalCode: "10890"
     });
     if building is persist:NotFoundError {
-        test:assertEquals(building.message(), "Not found: invalid-building-code");
+        test:assertEquals(building.message(), "A record with the key 'invalid-building-code' does not exist for the entity 'Building'.");
     } else {
         test:assertFail("NotFoundError expected.");
-    }    
+    }
 }
 
 @test:Config {
@@ -148,7 +148,7 @@ function gsheetsBuildingDeleteTest() returns error? {
     Building[] buildings = check from Building building2 in buildingStream
         select building2;
 
-    test:assertEquals(buildings, [building2, building3]);    
+    test:assertEquals(buildings, [building2, building3]);
 }
 
 @test:Config {
@@ -159,8 +159,8 @@ function gsheetsBuildingDeleteTest() returns error? {
 function gsheetsBuildingDeleteTestNegative() returns error? {
     Building|error building = rainierClient->/buildings/[building1.buildingCode].delete();
     if building is error {
-        test:assertEquals(building.message(), "Invalid key: building-1");
+        test:assertEquals(building.message(), "A record with the key 'building-1' does not exist for the entity 'Building'.");
     } else {
         test:assertFail("NotFoundError expected.");
-    }    
+    }
 }

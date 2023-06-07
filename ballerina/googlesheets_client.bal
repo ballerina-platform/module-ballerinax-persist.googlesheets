@@ -45,7 +45,7 @@ public isolated client class GoogleSheetsClient {
     private final map<string> & readonly dataTypes;
     private final string[] & readonly keyFields;
     private isolated function (string[]) returns stream<record {}, persist:Error?>|persist:Error query;
-    private isolated function (anydata) returns record {}|persist:NotFoundError queryOne;
+    private isolated function (anydata) returns record {}|persist:Error queryOne;
     private final (map<isolated function (record {}, string[]) returns record {}[]|persist:Error>) & readonly associationsMethods;
 
     # Initializes the `GSheetClient`.
@@ -86,25 +86,25 @@ public isolated client class GoogleSheetsClient {
                 return <persist:Error>error(output.message());
             }
             if output.length() > 0 {
-                return <persist:AlreadyExistsError>error(string `Duplicate key: ${self.generateKeyArrayString(self.keyFields, rowValues)}`);
+                return persist:getAlreadyExistsError(self.entityName, self.generateKeyRecord(self.keyFields, rowValues));
             }
             SheetBasicType[] values = [];
             foreach string key in fieldMetadataKeys {
                 string dataType = self.dataTypes.get(key).toString();
-                if dataType == "time:Date" || dataType == "time:TimeOfDay" ||dataType == "time:Civil" || dataType == "time:Utc" {
+                if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
                     SheetTimeType|error timeValue = rowValues.get(key).ensureType();
                     if timeValue is error {
-                        return <persist:Error> error(timeValue.message());
+                        return <persist:Error>error(timeValue.message());
                     }
                     string|error value = self.timeToString(timeValue);
                     if value is error {
-                        return <persist:Error> error(value.message());
+                        return <persist:Error>error(value.message());
                     }
                     values.push(value);
                 } else {
                     SheetBasicType|error value = rowValues.get(key).ensureType();
                     if value is error {
-                        return <persist:Error> error(value.message());
+                        return <persist:Error>error(value.message());
                     }
                     values.push(value);
                 }
@@ -113,11 +113,11 @@ public isolated client class GoogleSheetsClient {
             sheets:A1Range a1Range = {sheetName: self.tableName, startIndex: splitedRange[0], endIndex: splitedRange[1]};
             sheets:ValueRange|error insertedRow = self.googleSheetClient->appendValue(self.spreadsheetId, values, a1Range, "USER_ENTERED");
             if insertedRow is error {
-                return <persist:Error> error (insertedRow.message());
+                return <persist:Error>error(insertedRow.message());
             }
             error? response = self.googleSheetClient->setRowMetaData(self.spreadsheetId, self.sheetId, insertedRow.rowPosition, "DOCUMENT", self.tableName, metadataValue);
             if response is error {
-                return <persist:Error> error (response.message());
+                return <persist:Error>error(response.message());
             }
         }
     }
@@ -188,7 +188,7 @@ public isolated client class GoogleSheetsClient {
                     string columnName = re ` `.replaceAll(re `"`.replaceAll(columnNames[i], ""), "");
                     string value = re `"`.replaceAll(rowValue, "");
                     string dataType = self.dataTypes.get(columnName).toString();
-                    if dataType == "time:Date" || dataType == "time:TimeOfDay" ||dataType == "time:Civil" || dataType == "time:Utc" {
+                    if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
                         SheetFieldType|error typedValue = self.dataConverter(value, dataType);
                         if typedValue is error {
                             return <persist:Error>error(typedValue.message());
@@ -239,12 +239,9 @@ public isolated client class GoogleSheetsClient {
         if rows is error {
             return <persist:Error>error(rows.message());
         }
+
         if rows.length() == 0 {
-            if key is map<anydata> {
-                return <persist:NotFoundError>error(string `Not found: ${self.generateKeyArrayString(self.keyFields, key)}`);
-            } else {
-                return <persist:NotFoundError>error(string `Not found: ${key.toString()}`);
-            }
+            return persist:getNotFoundError(self.entityName, key);
         } else if rows.length() > 1 {
             return <persist:Error>error(string `Multiple elements found for given key: ${key.toString()}`);
         }
@@ -274,11 +271,13 @@ public isolated client class GoogleSheetsClient {
             } else {
                 SheetBasicType|error value;
                 string dataType = self.dataTypes.get(entityKey).toString();
+
                 if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
                     SheetTimeType|error timeValue = updateRecord.get(entityKey).ensureType();
                     if timeValue is error {
                         return <persist:Error>error(timeValue.message());
                     }
+
                     value = self.timeToString(timeValue);
                     if value is error {
                         return <persist:Error>error(value.message());
@@ -296,6 +295,7 @@ public isolated client class GoogleSheetsClient {
         error? response = self.googleSheetClient->updateRowByDataFilter(self.spreadsheetId, self.sheetId, filter, values, "USER_ENTERED");
         if response is error {
             return <persist:Error>error(response.message());
+
         }
     }
 
@@ -363,9 +363,9 @@ public isolated client class GoogleSheetsClient {
     private isolated function dataConverter(json value, string dataType) returns SheetFieldType|error {
         if dataType == "int" {
             return int:fromString(value.toString());
-        } else if dataType == "time:Date" || dataType == "time:TimeOfDay" ||dataType == "time:Civil" || dataType == "time:Utc" {
+        } else if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
             return self.stringToTime(value.toString(), dataType);
-        } else if dataType == "string"||dataType == "ENUM" {
+        } else if dataType == "string" || dataType == "ENUM" {
             return value.toString();
         } else if dataType == "decimal" {
             return decimal:fromString(value.toString());
@@ -400,6 +400,14 @@ public isolated client class GoogleSheetsClient {
         return string `[${metadataValue}]`;
     }
 
+    private isolated function generateKeyRecord(string[] keyFields, map<anydata> rowValues) returns record {} {
+        record {} keyRecord = {};
+        foreach string key in keyFields {
+            keyRecord[key] = rowValues[key];
+        }
+        return keyRecord;
+    }
+
     private isolated function removeUnwantedFields(record {} 'object, string[] fields) {
         foreach string keyField in self.keyFields {
             if fields.indexOf(keyField) is () {
@@ -413,7 +421,7 @@ public isolated client class GoogleSheetsClient {
         if timeValue is time:Civil {
             return time:civilToString(timeValue);
         }
-        
+
         if timeValue is time:Utc {
             return time:utcToString(timeValue);
         }
@@ -454,11 +462,11 @@ public isolated client class GoogleSheetsClient {
 
     private isolated function stringToTime(string timeValue, string dataType) returns SheetTimeType|error {
         if dataType == "time:TimeOfDay" {
-            string[] timeValues =  re `-`.split(timeValue);
+            string[] timeValues = re `-`.split(timeValue);
             time:TimeOfDay output = {hour: check int:fromString(timeValues[0]), minute: check int:fromString(timeValues[1]), second: check decimal:fromString(timeValues[2])};
             return output;
         } else if dataType == "time:Date" {
-            string[] timeValues =  re `-`.split(timeValue);
+            string[] timeValues = re `-`.split(timeValue);
             time:Date output = {day: check int:fromString(timeValues[0]), month: check int:fromString(timeValues[1]), year: check int:fromString(timeValues[2])};
             return output;
         } else if dataType == "time:Civil" {
