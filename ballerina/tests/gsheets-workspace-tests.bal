@@ -16,14 +16,15 @@
 
 import ballerina/test;
 import ballerina/persist;
+import ballerina/lang.runtime;
 
 @test:Config {
     groups: ["workspace", "google-sheets"],
     dependsOn: [gsheetsDepartmentDeleteTestNegative],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceCreateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
+    runtime:sleep(15);
     string[] workspaceIds = check rainierClient->/workspaces.post([workspace1]);
     test:assertEquals(workspaceIds, [workspace1.workspaceId]);
 
@@ -33,10 +34,9 @@ function gsheetsWorkspaceCreateTest() returns error? {
 
 @test:Config {
     groups: ["workspace", "google-sheets"],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceCreateTest2() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     string[] workspaceIds = check rainierClient->/workspaces.post([workspace2, workspace3]);
 
     test:assertEquals(workspaceIds, [workspace2.workspaceId, workspace3.workspaceId]);
@@ -51,10 +51,9 @@ function gsheetsWorkspaceCreateTest2() returns error? {
 @test:Config {
     groups: ["workspace", "google-sheets"],
     dependsOn: [gsheetsWorkspaceCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceReadOneTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Workspace workspaceRetrieved = check rainierClient->/workspaces/[workspace1.workspaceId].get();
     test:assertEquals(workspaceRetrieved, workspace1);
 }
@@ -62,10 +61,9 @@ function gsheetsWorkspaceReadOneTest() returns error? {
 @test:Config {
     groups: ["workspace", "google-sheets"],
     dependsOn: [gsheetsWorkspaceCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceReadOneDependentTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     WorkspaceInfo2 workspaceRetrieved = check rainierClient->/workspaces/[workspace1.workspaceId].get();
     test:assertEquals(workspaceRetrieved,
         {
@@ -78,10 +76,9 @@ function gsheetsWorkspaceReadOneDependentTest() returns error? {
 @test:Config {
     groups: ["workspace", "google-sheets"],
     dependsOn: [gsheetsWorkspaceCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceReadOneTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Workspace|error workspaceRetrieved = rainierClient->/workspaces/["invalid-workspace-id"].get();
     if workspaceRetrieved is persist:NotFoundError {
         test:assertEquals(workspaceRetrieved.message(), "A record with the key 'invalid-workspace-id' does not exist for the entity 'Workspace'.");
@@ -93,10 +90,9 @@ function gsheetsWorkspaceReadOneTestNegative() returns error? {
 @test:Config {
     groups: ["workspace", "google-sheets"],
     dependsOn: [gsheetsWorkspaceCreateTest, gsheetsWorkspaceCreateTest2],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceReadManyTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     stream<Workspace, error?> workspaceStream = rainierClient->/workspaces.get();
     Workspace[] workspaces = check from Workspace workspace in workspaceStream
         select workspace;
@@ -107,10 +103,9 @@ function gsheetsWorkspaceReadManyTest() returns error? {
 @test:Config {
     groups: ["workspace", "dependent"],
     dependsOn: [gsheetsWorkspaceCreateTest, gsheetsWorkspaceCreateTest2],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceReadManyDependentTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     stream<WorkspaceInfo2, error?> workspaceStream = rainierClient->/workspaces.get();
     WorkspaceInfo2[] workspaces = check from WorkspaceInfo2 workspace in workspaceStream
         select workspace;
@@ -125,10 +120,9 @@ function gsheetsWorkspaceReadManyDependentTest() returns error? {
 @test:Config {
     groups: ["workspace", "google-sheets"],
     dependsOn: [gsheetsWorkspaceReadOneTest, gsheetsWorkspaceReadManyTest, gsheetsWorkspaceReadManyDependentTest],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceUpdateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Workspace workspace = check rainierClient->/workspaces/[workspace1.workspaceId].put({
         workspaceType: "large"
     });
@@ -142,10 +136,9 @@ function gsheetsWorkspaceUpdateTest() returns error? {
 @test:Config {
     groups: ["workspace", "google-sheets"],
     dependsOn: [gsheetsWorkspaceReadOneTest, gsheetsWorkspaceReadManyTest, gsheetsWorkspaceReadManyDependentTest],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceUpdateTestNegative1() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Workspace|error workspace = rainierClient->/workspaces/["invalid-workspace-id"].put({
         workspaceType: "large"
     });
@@ -160,10 +153,9 @@ function gsheetsWorkspaceUpdateTestNegative1() returns error? {
 @test:Config {
     groups: ["workspace", "google-sheets"],
     dependsOn: [gsheetsWorkspaceUpdateTest, gsheetsWorkspaceUpdateTestNegative1],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceDeleteTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Workspace workspace = check rainierClient->/workspaces/[workspace1.workspaceId].delete();
     test:assertEquals(workspace, updatedWorkspace1);
 
@@ -177,10 +169,9 @@ function gsheetsWorkspaceDeleteTest() returns error? {
 @test:Config {
     groups: ["workspace", "google-sheets"],
     dependsOn: [gsheetsWorkspaceDeleteTest],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceDeleteTestNegative() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
     Workspace|error workspace = rainierClient->/workspaces/[workspace1.workspaceId].delete();
 
     if workspace is persist:NotFoundError {

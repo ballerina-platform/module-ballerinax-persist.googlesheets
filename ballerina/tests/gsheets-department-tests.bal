@@ -16,14 +16,15 @@
 
 import ballerina/test;
 import ballerina/persist;
+import ballerina/lang.runtime;
 
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsBuildingDeleteTestNegative],
-    enable: false
+    enable: true
 }
 function gsheetsDepartmentCreateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
+    runtime:sleep(15);
     string[] deptNos = check rainierClient->/departments.post([department1]);
     test:assertEquals(deptNos, [department1.deptNo]);
 
@@ -34,7 +35,7 @@ function gsheetsDepartmentCreateTest() returns error? {
 @test:Config {
     groups: ["department", "igoogle-sheets"],
     dependsOn: [gsheetsDepartmentCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsDepartmentCreateTest2() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -52,7 +53,7 @@ function gsheetsDepartmentCreateTest2() returns error? {
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsDepartmentReadOneTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -63,7 +64,7 @@ function gsheetsDepartmentReadOneTest() returns error? {
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsDepartmentReadOneTestNegative() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -78,7 +79,7 @@ function gsheetsDepartmentReadOneTestNegative() returns error? {
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentCreateTest, gsheetsDepartmentCreateTest2],
-    enable: false
+    enable: true
 }
 function gsheetsDepartmentReadManyTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -92,7 +93,7 @@ function gsheetsDepartmentReadManyTest() returns error? {
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentCreateTest, gsheetsDepartmentCreateTest2],
-    enable: false
+    enable: true
 }
 function gsheetsDepartmentReadManyTestDependent() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -110,7 +111,7 @@ function gsheetsDepartmentReadManyTestDependent() returns error? {
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentReadOneTest, gsheetsDepartmentReadManyTest, gsheetsDepartmentReadManyTestDependent],
-    enable: false
+    enable: true
 }
 function gsheetsDepartmentUpdateTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -127,7 +128,7 @@ function gsheetsDepartmentUpdateTest() returns error? {
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentReadOneTest, gsheetsDepartmentReadManyTest, gsheetsDepartmentReadManyTestDependent],
-    enable: false
+    enable: true
 }
 function gsheetsDepartmentUpdateTestNegative1() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -145,7 +146,7 @@ function gsheetsDepartmentUpdateTestNegative1() returns error? {
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentUpdateTest],
-    enable: false
+    enable: true
 }
 function gsheetsDepartmentDeleteTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -162,7 +163,7 @@ function gsheetsDepartmentDeleteTest() returns error? {
 @test:Config {
     groups: ["department", "google-sheets"],
     dependsOn: [gsheetsDepartmentDeleteTest],
-    enable: false
+    enable: true
 }
 function gsheetsDepartmentDeleteTestNegative() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();

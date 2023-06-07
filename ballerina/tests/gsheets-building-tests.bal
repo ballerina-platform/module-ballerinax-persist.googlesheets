@@ -16,14 +16,15 @@
 
 import ballerina/test;
 import ballerina/persist;
+import ballerina/lang.runtime;
 
 @test:Config {
     groups: ["building", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyDeleteTestNegative],
-    enable: false
+    enable: true
 }
 function gsheetsBuildingCreateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
+    runtime:sleep(15);
     string[] buildingCodes = check rainierClient->/buildings.post([building1]);
     test:assertEquals(buildingCodes, [building1.buildingCode]);
 
@@ -34,7 +35,7 @@ function gsheetsBuildingCreateTest() returns error? {
 @test:Config {
     groups: ["building", "google-sheets"],
     dependsOn: [gsheetsBuildingCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsBuildingCreateTest2() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -52,7 +53,7 @@ function gsheetsBuildingCreateTest2() returns error? {
 @test:Config {
     groups: ["building", "google-sheets"],
     dependsOn: [gsheetsBuildingCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsBuildingReadOneTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -63,7 +64,7 @@ function gsheetsBuildingReadOneTest() returns error? {
 @test:Config {
     groups: ["building", "google-sheets"],
     dependsOn: [gsheetsBuildingCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsBuildingReadOneTestNegative() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -78,7 +79,7 @@ function gsheetsBuildingReadOneTestNegative() returns error? {
 @test:Config {
     groups: ["building", "google-sheets"],
     dependsOn: [gsheetsBuildingCreateTest, gsheetsBuildingCreateTest2],
-    enable: false
+    enable: true
 }
 function gsheetsBuildingReadManyTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -91,7 +92,7 @@ function gsheetsBuildingReadManyTest() returns error? {
 @test:Config {
     groups: ["building", "google-sheets"],
     dependsOn: [gsheetsBuildingCreateTest, gsheetsBuildingCreateTest2],
-    enable: false
+    enable: true
 }
 function gsheetsBuildingReadManyDependentTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -108,7 +109,7 @@ function gsheetsBuildingReadManyDependentTest() returns error? {
 @test:Config {
     groups: ["building", "google-sheets"],
     dependsOn: [gsheetsBuildingReadOneTest, gsheetsBuildingReadManyTest, gsheetsBuildingReadManyDependentTest],
-    enable: false
+    enable: true
 }
 function gsheetsBuildingUpdateTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -126,7 +127,7 @@ function gsheetsBuildingUpdateTest() returns error? {
 @test:Config {
     groups: ["building", "google-sheets"],
     dependsOn: [gsheetsBuildingReadOneTest, gsheetsBuildingReadManyTest, gsheetsBuildingReadManyDependentTest],
-    enable: false
+    enable: true
 }
 function gsheetsBuildingUpdateTestNegative1() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -145,7 +146,7 @@ function gsheetsBuildingUpdateTestNegative1() returns error? {
 @test:Config {
     groups: ["building", "google-sheets"],
     dependsOn: [gsheetsBuildingUpdateTest],
-    enable: false
+    enable: true
 }
 function gsheetsBuildingDeleteTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -161,7 +162,7 @@ function gsheetsBuildingDeleteTest() returns error? {
 @test:Config {
     groups: ["building", "google-sheets"],
     dependsOn: [gsheetsBuildingDeleteTest],
-    enable: false
+    enable: true
 }
 function gsheetsBuildingDeleteTestNegative() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();

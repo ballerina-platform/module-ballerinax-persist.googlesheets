@@ -16,6 +16,7 @@
 
 import ballerina/test;
 import ballerina/persist;
+import ballerina/lang.runtime;
 
 OrderItem orderItem1 = {
     orderId: "order-1",
@@ -40,10 +41,10 @@ OrderItem orderItem2Updated = {
 
 @test:Config {
     groups: ["composite-key", "google-sheets"],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyCreateTest() returns error? {
-    GoogleSheetsRainierClient rainierClient = check new ();
+    runtime:sleep(15);
     [string, string][] ids = check rainierClient->/orderitems.post([orderItem1, orderItem2]);
     test:assertEquals(ids, [[orderItem1.orderId, orderItem1.itemId], [orderItem2.orderId, orderItem2.itemId]]);
 
@@ -57,7 +58,7 @@ function gsheetsCompositeKeyCreateTest() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCmpositeKeyCreateTestNegative() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -72,7 +73,7 @@ function gsheetsCmpositeKeyCreateTestNegative() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyReadManyTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -86,7 +87,7 @@ function gsheetsCompositeKeyReadManyTest() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyReadOneTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -97,7 +98,7 @@ function gsheetsCompositeKeyReadOneTest() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyReadOneTest2() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -108,7 +109,7 @@ function gsheetsCompositeKeyReadOneTest2() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyReadOneTestNegative1() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -123,7 +124,7 @@ function gsheetsCompositeKeyReadOneTestNegative1() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyReadOneTestNegative2() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -138,7 +139,7 @@ function gsheetsCompositeKeyReadOneTestNegative2() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest, gsheetsCompositeKeyReadOneTest, gsheetsCompositeKeyReadManyTest, gsheetsCompositeKeyReadOneTest2],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyUpdateTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -155,7 +156,7 @@ function gsheetsCompositeKeyUpdateTest() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyCreateTest, gsheetsCompositeKeyReadOneTest, gsheetsCompositeKeyReadManyTest, gsheetsCompositeKeyReadOneTest2],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyUpdateTestNegative() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -173,7 +174,7 @@ function gsheetsCompositeKeyUpdateTestNegative() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyUpdateTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyDeleteTest() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
@@ -187,7 +188,7 @@ function gsheetsCompositeKeyDeleteTest() returns error? {
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     dependsOn: [gsheetsCompositeKeyDeleteTest],
-    enable: false
+    enable: true
 }
 function gsheetsCompositeKeyDeleteTestNegative() returns error? {
     GoogleSheetsRainierClient rainierClient = check new ();
