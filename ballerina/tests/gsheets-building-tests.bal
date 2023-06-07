@@ -159,7 +159,7 @@ function gsheetsBuildingDeleteTest() returns error? {
 function gsheetsBuildingDeleteTestNegative() returns error? {
     Building|error building = rainierClient->/buildings/[building1.buildingCode].delete();
     if building is error {
-        test:assertEquals(building.message(), "A record with the key 'building1' does not exist for the entity 'Building'.");
+        test:assertEquals(building.message(), "A record with the key 'building-1' does not exist for the entity 'Building'.");
     } else {
         test:assertFail("NotFoundError expected.");
     }

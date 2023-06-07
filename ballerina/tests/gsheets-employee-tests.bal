@@ -181,7 +181,6 @@ function gsheetsEmployeeDeleteTestNegative() returns error? {
 
     if employee is persist:NotFoundError {
         test:assertEquals(employee.message(), "A record with the key 'employee-1' does not exist for the entity 'Employee'.");
-        test:assertEquals(employee.message(), string `Invalid key: employee-1`);
     } else {
         test:assertFail("NotFoundError expected.");
     }
