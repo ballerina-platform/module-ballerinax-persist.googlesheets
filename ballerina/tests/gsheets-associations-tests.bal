@@ -16,14 +16,15 @@
 
 import ballerina/test;
 import ballerina/persist;
+import ballerina/lang.runtime;
 
 @test:Config {
     groups: ["associations", "google-sheets"],
     dependsOn: [gsheetsEmployeeDeleteTestNegative],
-    enable: false
+    enable: true
 }
 function gsheetsEmployeeRelationsTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
+    runtime:sleep(15);
     Employee employee21 = {
         empNo: "employee-21",
         firstName: "Tom",
@@ -86,10 +87,9 @@ function gsheetsEmployeeRelationsTest() returns error? {
 @test:Config {
     groups: ["associations", "google-sheets"],
     dependsOn: [gsheetsEmployeeDeleteTestNegative],
-    enable: false
+    enable: true
 }
 function gsheetsDepartmentRelationsTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     Employee employee11 = {
         empNo: "employee-11",
         firstName: "Tom",
@@ -165,10 +165,9 @@ function gsheetsDepartmentRelationsTest() returns error? {
 @test:Config {
     groups: ["associations", "google-sheets"],
     dependsOn: [gsheetsEmployeeRelationsTest],
-    enable: false
+    enable: true
 }
 function gsheetsWorkspaceRelationsTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     Employee employee22 = {
         empNo: "employee-22",
         firstName: "James",
@@ -237,10 +236,9 @@ function gsheetsWorkspaceRelationsTest() returns error? {
 @test:Config {
     groups: ["associations", "google-sheets"],
     dependsOn: [gsheetsEmployeeRelationsTest],
-    enable: false
+    enable: true
 }
 function gsheetsBuildingRelationsTest() returns error? {
-    GoogleSheetsRainierClient rainierClient =  check new ();
     stream<BuildingInfo, error?> buildingStream = rainierClient->/buildings.get();
     BuildingInfo[] buildings = check from BuildingInfo building in buildingStream
         select building;
