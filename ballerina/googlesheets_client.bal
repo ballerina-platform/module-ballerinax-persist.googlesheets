@@ -419,7 +419,7 @@ public isolated client class GoogleSheetsClient {
     private isolated function timeToString(SheetTimeType timeValue) returns string|error {
 
         if timeValue is time:Civil {
-            return time:civilToString(timeValue);
+            return self.civilToString(timeValue);
         }
 
         if timeValue is time:Utc {
@@ -436,6 +436,38 @@ public isolated client class GoogleSheetsClient {
 
         return <persist:Error>error("Error: unsupported time format");
 
+    }
+
+    private isolated function civilToString(time:Civil civil) returns string|error {
+        string civilString = string `${civil.year}:${civil.month}:${civil.day}:${civil.dayOfWeek ?: "nil"}:${civil.hour}:${civil.minute}:${civil.second ?: "nil"}:${civil.timeAbbrev ?: "nil"}:${civil.which ?: "nil"}`;
+        if civil.utcOffset !is () {
+            time:ZoneOffset zoneOffset = <time:ZoneOffset>civil.utcOffset;
+            civilString += string `;${zoneOffset.hours}:${zoneOffset.minutes}:${zoneOffset.seconds ?: "nil"}`;
+        }
+        return civilString;
+    }
+
+    private isolated function stringToCivil(string civilString) returns time:Civil|error {
+        time:ZoneOffset? zoneOffset = ();
+        string[] civilArray = [];
+        if civilString.includes(";", 0) {
+            string[] civilStringArray = re `;`.split(civilString);
+            civilArray = re `:`.split(civilStringArray[0]);
+            string[] zoneOffsetStringArray = re `:`.split(civilStringArray[1]);
+            zoneOffset = {hours: check int:fromString(zoneOffsetStringArray[0]), minutes: check int:fromString(zoneOffsetStringArray[1]), seconds:((zoneOffsetStringArray[2] == "nil")? (): check decimal:fromString(zoneOffsetStringArray[2]))};
+        } else {
+            civilArray = re `:`.split(civilString);
+        }
+        int year = check int:fromString(civilArray[0]);
+        int month = check int:fromString(civilArray[1]);
+        int day = check int:fromString(civilArray[2]);
+        time:DayOfWeek? dayOfWeek = (civilArray[3] == "nil")? (): <time:DayOfWeek>(check int:fromString(civilArray[3]));
+        int hour = check int:fromString(civilArray[4]);
+        int minute = check int:fromString(civilArray[5]);
+        decimal? second = (civilArray[6] == "nil")? (): check decimal:fromString(civilArray[6]);
+        string? timeAbbrev = (civilArray[7] == "nil")? (): civilArray[7];
+        time:ZERO_OR_ONE? which = (civilArray[8] == "nil")? (): (civilArray[8] == "0")? 0: 1;
+        return <time:Civil>{year: year, month: month, day: day, hour: hour, minute: minute, second: second, timeAbbrev: timeAbbrev, which: which, utcOffset: zoneOffset, dayOfWeek: dayOfWeek};
     }
 
     private isolated function valuesFromString(string value, string dataType) returns SheetNumericType|error {
@@ -470,7 +502,7 @@ public isolated client class GoogleSheetsClient {
             time:Date output = {day: check int:fromString(timeValues[0]), month: check int:fromString(timeValues[1]), year: check int:fromString(timeValues[2])};
             return output;
         } else if dataType == "time:Civil" {
-            return time:civilFromString(timeValue);
+            return self.stringToCivil(timeValue);
         } else if dataType == "time:Utc" {
             return time:utcFromString(timeValue);
         } else {
