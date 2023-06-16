@@ -18,6 +18,7 @@ import ballerina/persist;
 import ballerina/url;
 import ballerina/http;
 import ballerina/time;
+import ballerina/lang.regexp;
 import ballerinax/googleapis.sheets;
 
 type Table record {
@@ -419,7 +420,7 @@ public isolated client class GoogleSheetsClient {
     private isolated function timeToString(SheetTimeType timeValue) returns string|error {
 
         if timeValue is time:Civil {
-            return time:civilToString(timeValue);
+            return self.civilToString(timeValue);
         }
 
         if timeValue is time:Utc {
@@ -436,6 +437,66 @@ public isolated client class GoogleSheetsClient {
 
         return <persist:Error>error("Error: unsupported time format");
 
+    }
+
+    private isolated function civilToString(time:Civil civil) returns string|error {
+        string civilString = string `${civil.year}-${(civil.month.abs() > 9? civil.month: string `0${civil.month}`)}-${(civil.day.abs() > 9? civil.day: string `0${civil.day}`)}`;
+        civilString += string `T${(civil.hour.abs() > 9? civil.hour: string `0${civil.hour}`)}:${(civil.minute.abs() > 9? civil.minute: string `0${civil.minute}`)}`;
+        if civil.second !is () {
+            time:Seconds seconds = <time:Seconds>civil.second;
+            civilString += string `:${(seconds.abs() > (check decimal:fromString("9"))? seconds: string `0${seconds}`)}`;
+        }
+        if civil.utcOffset !is () {
+            time:ZoneOffset zoneOffset = <time:ZoneOffset>civil.utcOffset;
+            civilString += (zoneOffset.hours >= 0? "+" : "-");
+            civilString += string `${zoneOffset.hours.abs() > 9? zoneOffset.hours.abs() : string `0${zoneOffset.hours.abs()}`}`;
+            civilString += string `:${(zoneOffset.minutes.abs() > 9? zoneOffset.minutes.abs(): string `0${zoneOffset.minutes.abs()}`)}`;
+            time:Seconds? seconds = zoneOffset.seconds;
+            if seconds !is () {
+                civilString += string `:${(seconds.abs() > 9d? seconds: string `0${seconds.abs()}`)}`;
+            } else {
+                civilString += string `:00`;
+            }
+
+        } if civil.timeAbbrev !is () {
+            civilString += string `(${<string>civil.timeAbbrev})`;
+        }
+        return civilString;
+    }
+
+    private isolated function stringToCivil(string civilString) returns time:Civil|error {
+        time:ZoneOffset? zoneOffset = ();
+        string civilTimeString = "";
+        string civilDateString = "";
+        string? timeAbbrev = ();
+        regexp:Span? find = re `\(.*\)`.find(civilString.trim(), 0);
+        if find !is () {
+            timeAbbrev = civilString.trim().substring(find.startIndex+1, find.endIndex-1);
+        }
+        string[] civilArray = re `T`.split(re `\(.*\)`.replace(civilString.trim(), ""));
+        civilDateString = civilArray[0];
+        find = re `\+|-`.find(civilArray[1], 0);
+        if find !is () {
+            int sign = +1;
+            if civilArray[1].includes("-") {
+                sign = -1;
+            }
+            string[] civilTimeOffsetArray = re `\+|-`.split(civilArray[1]);
+            civilTimeString = civilTimeOffsetArray[0];
+            string[] zoneOffsetStringArray = re `:`.split(civilTimeOffsetArray[1]);
+            zoneOffset = {hours: sign * (check int:fromString(zoneOffsetStringArray[0])), minutes: sign * (check int:fromString(zoneOffsetStringArray[1])), seconds: sign * (check decimal:fromString(zoneOffsetStringArray[2]))};
+        } else {
+            civilTimeString = civilArray[1];
+        }
+        string[] civilTimeStringArray = re `:`.split(civilTimeString);
+        string[] civilDateStringArray = re `-`.split(civilDateString);
+        int year = check int:fromString(civilDateStringArray[0]);
+        int month = check int:fromString(civilDateStringArray[1]);
+        int day = check int:fromString(civilDateStringArray[2]);
+        int hour = check int:fromString(civilTimeStringArray[0]);
+        int minute = check int:fromString(civilTimeStringArray[1]);
+        decimal second = check decimal:fromString(civilTimeStringArray[2]);
+        return <time:Civil>{year: year, month: month, day: day, hour: hour, minute: minute, second: second, timeAbbrev: timeAbbrev, utcOffset: zoneOffset};
     }
 
     private isolated function valuesFromString(string value, string dataType) returns SheetNumericType|error {
@@ -470,7 +531,7 @@ public isolated client class GoogleSheetsClient {
             time:Date output = {day: check int:fromString(timeValues[0]), month: check int:fromString(timeValues[1]), year: check int:fromString(timeValues[2])};
             return output;
         } else if dataType == "time:Civil" {
-            return time:civilFromString(timeValue);
+            return self.stringToCivil(timeValue);
         } else if dataType == "time:Utc" {
             return time:utcFromString(timeValue);
         } else {
