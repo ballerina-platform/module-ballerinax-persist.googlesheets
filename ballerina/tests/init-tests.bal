@@ -73,7 +73,7 @@ OrderItemExtended orderItemExtended1 = {
     paid: false,
     ammountPaid: 10.5f,
     ammountPaidDecimal: 10.5,
-    arivalTimeCivil: {"utcOffset":{"hours":5,"minutes":30, seconds: 0},"timeAbbrev":"Asia/Colombo","year":2021,"month":4,"day":12,"hour":23,"minute":20,"second":50.52},
+    arivalTimeCivil: {"utcOffset":{"hours":-5,"minutes":-30, seconds: 0},"timeAbbrev":"Asia/Colombo","year":2021,"month":4,"day":12,"hour":23,"minute":20,"second":50.52},
     arivalTimeUtc: [1684493685, 0.998012000],
     arivalTimeDate: {year: 2021, month: 4, day: 12},
     arivalTimeTimeOfDay: {hour: 17, minute: 50, second: 50.52},

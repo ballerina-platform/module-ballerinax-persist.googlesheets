@@ -448,11 +448,12 @@ public isolated client class GoogleSheetsClient {
         }
         if civil.utcOffset !is () {
             time:ZoneOffset zoneOffset = <time:ZoneOffset>civil.utcOffset;
-            civilString += string ` ${(zoneOffset.hours.abs() > 9? zoneOffset.hours : (zoneOffset.hours > 0? string `0${zoneOffset.hours}`: string `-0${zoneOffset.hours.abs()}`))}`;
-            civilString += string `:${(zoneOffset.minutes.abs() > 9? zoneOffset.minutes: (zoneOffset.minutes > 0? string `0${zoneOffset.minutes}`: string `-0${zoneOffset.minutes.abs()}`))}`;
+            civilString += (zoneOffset.hours >= 0? "+" : "-");
+            civilString += string `${zoneOffset.hours.abs() > 9? zoneOffset.hours.abs() : string `0${zoneOffset.hours.abs()}`}`;
+            civilString += string `:${(zoneOffset.minutes.abs() > 9? zoneOffset.minutes.abs(): string `0${zoneOffset.minutes.abs()}`)}`;
             time:Seconds? seconds = zoneOffset.seconds;
             if seconds !is () {
-                civilString += string `:${(seconds.abs() > 9d? seconds: (seconds > 0d? string `0${seconds}`: string `-0${seconds.abs().toString()}`))}`;
+                civilString += string `:${(seconds.abs() > 9d? seconds: string `0${seconds.abs()}`)}`;
             } else {
                 civilString += string `:00`;
             }
@@ -465,28 +466,36 @@ public isolated client class GoogleSheetsClient {
 
     private isolated function stringToCivil(string civilString) returns time:Civil|error {
         time:ZoneOffset? zoneOffset = ();
-        string civilTimeDateString = "";
+        string civilTimeString = "";
+        string civilDateString = "";
         string? timeAbbrev = ();
         regexp:Span? find = re `\(.*\)`.find(civilString, 0);
         if find !is () {
             timeAbbrev = civilString.substring(find.startIndex+1, find.endIndex-1);
         }
-        if civilString.includes(" ", 0) {
-            string[] civilStringArray = re ` `.split(civilString);
-            civilTimeDateString = civilStringArray[0];
-            string zoneOffsetString = re `\(.*\)`.replace(civilStringArray[1], "");
-            string[] zoneOffsetStringArray = re `:`.split(zoneOffsetString);
-            zoneOffset = {hours: check int:fromString(zoneOffsetStringArray[0]), minutes: check int:fromString(zoneOffsetStringArray[1]), seconds: check decimal:fromString(zoneOffsetStringArray[2])};
+        string[] civilArray = re `T`.split(re `\(.*\)`.replace(civilString, ""));
+        civilDateString = civilArray[0];
+        find = re `\+|-`.find(civilArray[1], 0);
+        if find !is () {
+            int sign = +1;
+            if civilArray[1].includes("-") {
+                sign = -1;
+            }
+            string[] civilTimeOffsetArray = re `\+|-`.split(civilArray[1]);
+            civilTimeString = civilTimeOffsetArray[0];
+            string[] zoneOffsetStringArray = re `:`.split(civilTimeOffsetArray[1]);
+            zoneOffset = {hours: sign * (check int:fromString(zoneOffsetStringArray[0])), minutes: sign * (check int:fromString(zoneOffsetStringArray[1])), seconds: sign * (check decimal:fromString(zoneOffsetStringArray[2]))};
         } else {
-            civilTimeDateString = re `\(.*\)`.replace(civilString, "");
+            civilTimeString = civilArray[1];
         }
-        string[] civilArray = re `-|T|:`.split(civilTimeDateString);
-        int year = check int:fromString(civilArray[0]);
-        int month = check int:fromString(civilArray[1]);
-        int day = check int:fromString(civilArray[2]);
-        int hour = check int:fromString(civilArray[3]);
-        int minute = check int:fromString(civilArray[4]);
-        decimal second = check decimal:fromString(civilArray[5]);
+        string[] civilTimeStringArray = re `:`.split(civilTimeString);
+        string[] civilDateStringArray = re `-`.split(civilDateString);
+        int year = check int:fromString(civilDateStringArray[0]);
+        int month = check int:fromString(civilDateStringArray[1]);
+        int day = check int:fromString(civilDateStringArray[2]);
+        int hour = check int:fromString(civilTimeStringArray[0]);
+        int minute = check int:fromString(civilTimeStringArray[1]);
+        decimal second = check decimal:fromString(civilTimeStringArray[2]);
         return <time:Civil>{year: year, month: month, day: day, hour: hour, minute: minute, second: second, timeAbbrev: timeAbbrev, utcOffset: zoneOffset};
     }
 
