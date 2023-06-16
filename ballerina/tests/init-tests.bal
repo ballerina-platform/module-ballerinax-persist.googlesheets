@@ -47,8 +47,10 @@ function resetExistingSheets(sheets:Client spreadsheetClient, sheets:Spreadsheet
     foreach sheets:Sheet sheet in spreadSheet.sheets {
         if sheetNames.indexOf(sheet.properties.title, 0) !is () {
             check spreadsheetClient->removeSheet(spreadsheetId, sheet.properties.sheetId);
-            _ = check spreadsheetClient->addSheet(spreadSheet.spreadsheetId, sheet.properties.title);
         }
+    }
+    foreach string sheetName in sheetNames {
+        _ = check spreadsheetClient->addSheet(spreadSheet.spreadsheetId, sheetName);
     }
 }
 
@@ -71,7 +73,7 @@ OrderItemExtended orderItemExtended1 = {
     paid: false,
     ammountPaid: 10.5f,
     ammountPaidDecimal: 10.5,
-    arivalTimeCivil: {"utcOffset":{"hours":5,"minutes":30},"timeAbbrev":"Asia/Colombo","dayOfWeek":1,"year":2021,"month":4,"day":12,"hour":23,"minute":20,"second":50.52},
+    arivalTimeCivil: {"utcOffset":{"hours":-5,"minutes":-30, seconds: 0},"timeAbbrev":"Asia/Colombo","year":2021,"month":4,"day":12,"hour":23,"minute":20,"second":50.52},
     arivalTimeUtc: [1684493685, 0.998012000],
     arivalTimeDate: {year: 2021, month: 4, day: 12},
     arivalTimeTimeOfDay: {hour: 17, minute: 50, second: 50.52},
@@ -85,7 +87,7 @@ OrderItemExtended orderItemExtended2 = {
     paid: false,
     ammountPaid: 10.5f,
     ammountPaidDecimal: 10.5,
-    arivalTimeCivil: {"utcOffset":{"hours":5,"minutes":30},"timeAbbrev":"Asia/Colombo","dayOfWeek":1 ,"year":2024,"month":4,"day":12,"hour":17,"minute":50,"second":50.52},
+    arivalTimeCivil: {"utcOffset":{"hours":5,"minutes":30, seconds: 0},"timeAbbrev":"Asia/Colombo","year":2024,"month":4,"day":12,"hour":17,"minute":50,"second":50.52},
     arivalTimeUtc: [1684493685, 0.998012000],
     arivalTimeDate: {year: 2021, month: 4, day: 12},
     arivalTimeTimeOfDay: {hour: 17, minute: 50, second: 50.52},
@@ -99,7 +101,7 @@ OrderItemExtended orderItemExtended2Updated = {
     paid: true,
     ammountPaid: 10.5f,
     ammountPaidDecimal: 10.5,
-    arivalTimeCivil: {"utcOffset":{"hours":5,"minutes":30},"timeAbbrev":"Asia/Colombo","dayOfWeek":1,"year":2021,"month":4,"day":12,"hour":23,"minute":20,"second":50.52},
+    arivalTimeCivil: {"utcOffset":{"hours":5,"minutes":30, seconds: 0},"timeAbbrev":"Asia/Colombo","year":2021,"month":4,"day":12,"hour":23,"minute":20,"second":50.52},
     arivalTimeUtc: [1684493685, 0.998012000],
     arivalTimeDate: {year: 2021, month: 4, day: 12},
     arivalTimeTimeOfDay: {hour: 17, minute: 50, second: 50.52},
@@ -124,7 +126,7 @@ OrderItemExtended orderItemExtended3 = {
     paid: true,
     ammountPaid: 20.5f,
     ammountPaidDecimal: 20.5,
-    arivalTimeCivil: {"utcOffset":{"hours":5,"minutes":30},"timeAbbrev":"Asia/Colombo","dayOfWeek":1,"year":2021,"month":4,"day":12,"hour":23,"minute":20,"second":50.52},
+    arivalTimeCivil: {"utcOffset":{"hours":5,"minutes":30, seconds: 0},"timeAbbrev":"Asia/Colombo","year":2021,"month":4,"day":12,"hour":23,"minute":20,"second":50.52},
     arivalTimeUtc: [1684493685, 0.998012000],
     arivalTimeDate: {year: 2021, month: 4, day: 12},
     arivalTimeTimeOfDay: {hour: 17, minute: 50, second: 50.52},
