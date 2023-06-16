@@ -18,6 +18,7 @@ import ballerina/persist;
 import ballerina/url;
 import ballerina/http;
 import ballerina/time;
+import ballerina/lang.regexp;
 import ballerinax/googleapis.sheets;
 
 type Table record {
@@ -439,35 +440,54 @@ public isolated client class GoogleSheetsClient {
     }
 
     private isolated function civilToString(time:Civil civil) returns string|error {
-        string civilString = string `${civil.year}:${civil.month}:${civil.day}:${civil.dayOfWeek ?: "nil"}:${civil.hour}:${civil.minute}:${civil.second ?: "nil"}:${civil.timeAbbrev ?: "nil"}:${civil.which ?: "nil"}`;
+        string civilString = string `${civil.year}-${(civil.month.abs() > 9? civil.month: string `0${civil.month}`)}-${(civil.day.abs() > 9? civil.day: string `0${civil.day}`)}`;
+        civilString += string `T${(civil.hour.abs() > 9? civil.hour: string `0${civil.hour}`)}:${(civil.minute.abs() > 9? civil.minute: string `0${civil.minute}`)}`;
+        if civil.second !is () {
+            time:Seconds seconds = <time:Seconds>civil.second;
+            civilString += string `:${(seconds.abs() > (check decimal:fromString("9"))? seconds: string `0${seconds}`)}`;
+        }
         if civil.utcOffset !is () {
             time:ZoneOffset zoneOffset = <time:ZoneOffset>civil.utcOffset;
-            civilString += string `;${zoneOffset.hours}:${zoneOffset.minutes}:${zoneOffset.seconds ?: "nil"}`;
+            civilString += string ` ${(zoneOffset.hours.abs() > 9? zoneOffset.hours : (zoneOffset.hours > 0? string `0${zoneOffset.hours}`: string `-0${zoneOffset.hours.abs()}`))}`;
+            civilString += string `:${(zoneOffset.minutes.abs() > 9? zoneOffset.minutes: (zoneOffset.minutes > 0? string `0${zoneOffset.minutes}`: string `-0${zoneOffset.minutes.abs()}`))}`;
+            time:Seconds? seconds = zoneOffset.seconds;
+            if seconds !is () {
+                civilString += string `:${(seconds.abs() > 9d? seconds: (seconds > 0d? string `0${seconds}`: string `-0${seconds.abs().toString()}`))}`;
+            } else {
+                civilString += string `:00`;
+            }
+
+        } if civil.timeAbbrev !is () {
+            civilString += string `(${<string>civil.timeAbbrev})`;
         }
         return civilString;
     }
 
     private isolated function stringToCivil(string civilString) returns time:Civil|error {
         time:ZoneOffset? zoneOffset = ();
-        string[] civilArray = [];
-        if civilString.includes(";", 0) {
-            string[] civilStringArray = re `;`.split(civilString);
-            civilArray = re `:`.split(civilStringArray[0]);
-            string[] zoneOffsetStringArray = re `:`.split(civilStringArray[1]);
-            zoneOffset = {hours: check int:fromString(zoneOffsetStringArray[0]), minutes: check int:fromString(zoneOffsetStringArray[1]), seconds:((zoneOffsetStringArray[2] == "nil")? (): check decimal:fromString(zoneOffsetStringArray[2]))};
-        } else {
-            civilArray = re `:`.split(civilString);
+        string civilTimeDateString = "";
+        string? timeAbbrev = ();
+        regexp:Span? find = re `\(.*\)`.find(civilString, 0);
+        if find !is () {
+            timeAbbrev = civilString.substring(find.startIndex+1, find.endIndex-1);
         }
+        if civilString.includes(" ", 0) {
+            string[] civilStringArray = re ` `.split(civilString);
+            civilTimeDateString = civilStringArray[0];
+            string zoneOffsetString = re `\(.*\)`.replace(civilStringArray[1], "");
+            string[] zoneOffsetStringArray = re `:`.split(zoneOffsetString);
+            zoneOffset = {hours: check int:fromString(zoneOffsetStringArray[0]), minutes: check int:fromString(zoneOffsetStringArray[1]), seconds: check decimal:fromString(zoneOffsetStringArray[2])};
+        } else {
+            civilTimeDateString = re `\(.*\)`.replace(civilString, "");
+        }
+        string[] civilArray = re `-|T|:`.split(civilTimeDateString);
         int year = check int:fromString(civilArray[0]);
         int month = check int:fromString(civilArray[1]);
         int day = check int:fromString(civilArray[2]);
-        time:DayOfWeek? dayOfWeek = (civilArray[3] == "nil")? (): <time:DayOfWeek>(check int:fromString(civilArray[3]));
-        int hour = check int:fromString(civilArray[4]);
-        int minute = check int:fromString(civilArray[5]);
-        decimal? second = (civilArray[6] == "nil")? (): check decimal:fromString(civilArray[6]);
-        string? timeAbbrev = (civilArray[7] == "nil")? (): civilArray[7];
-        time:ZERO_OR_ONE? which = (civilArray[8] == "nil")? (): (civilArray[8] == "0")? 0: 1;
-        return <time:Civil>{year: year, month: month, day: day, hour: hour, minute: minute, second: second, timeAbbrev: timeAbbrev, which: which, utcOffset: zoneOffset, dayOfWeek: dayOfWeek};
+        int hour = check int:fromString(civilArray[3]);
+        int minute = check int:fromString(civilArray[4]);
+        decimal second = check decimal:fromString(civilArray[5]);
+        return <time:Civil>{year: year, month: month, day: day, hour: hour, minute: minute, second: second, timeAbbrev: timeAbbrev, utcOffset: zoneOffset};
     }
 
     private isolated function valuesFromString(string value, string dataType) returns SheetNumericType|error {
