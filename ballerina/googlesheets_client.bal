@@ -469,11 +469,11 @@ public isolated client class GoogleSheetsClient {
         string civilTimeString = "";
         string civilDateString = "";
         string? timeAbbrev = ();
-        regexp:Span? find = re `\(.*\)`.find(civilString, 0);
+        regexp:Span? find = re `\(.*\)`.find(civilString.trim(), 0);
         if find !is () {
-            timeAbbrev = civilString.substring(find.startIndex+1, find.endIndex-1);
+            timeAbbrev = civilString.trim().substring(find.startIndex+1, find.endIndex-1);
         }
-        string[] civilArray = re `T`.split(re `\(.*\)`.replace(civilString, ""));
+        string[] civilArray = re `T`.split(re `\(.*\)`.replace(civilString.trim(), ""));
         civilDateString = civilArray[0];
         find = re `\+|-`.find(civilArray[1], 0);
         if find !is () {
