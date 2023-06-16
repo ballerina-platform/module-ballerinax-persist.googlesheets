@@ -25,10 +25,10 @@ function gsheetsAllDataTypeCreateTest() returns error? {
     test:assertEquals(ids, [[orderItemExtended1.orderId, orderItemExtended1.itemId], [orderItemExtended2.orderId, orderItemExtended2.itemId]]);
 
     OrderItemExtended orderItemRetrieved = check rainierClientAllDataType->/orderitemextendeds/[orderItemExtended1.orderId]/[orderItemExtended1.itemId].get();
-    test:assertEquals(orderItemRetrieved, orderItemExtendedRetrieved);
+    test:assertEquals(orderItemRetrieved, orderItemExtended1);
 
     orderItemRetrieved = check rainierClientAllDataType->/orderitemextendeds/[orderItemExtended2.orderId]/[orderItemExtended2.itemId].get();
-    test:assertEquals(orderItemRetrieved, orderItemExtended2Retrieved);
+    test:assertEquals(orderItemRetrieved, orderItemExtended2);
 }
 
 @test:Config {
@@ -41,7 +41,7 @@ function gsheetsAllTypesReadManyTest() returns error? {
     OrderItemExtended[] orderitem = check from OrderItemExtended orderItem in orderItemStream
         select orderItem;
 
-    test:assertEquals(orderitem, [orderItemExtendedRetrieved, orderItemExtended2Retrieved]);
+    test:assertEquals(orderitem, [orderItemExtended1, orderItemExtended2]);
 }
 
 @test:Config {
@@ -54,8 +54,8 @@ function gsheetsAllDataTypeUpdateTest() returns error? {
         arivalTimeCivil : orderItemExtended3.arivalTimeCivil,
         paid: orderItemExtended3.paid
     });
-    test:assertEquals(orderItemRetrieved, orderItemExtended3Retrieved);
+    test:assertEquals(orderItemRetrieved, orderItemExtended2Updated);
 
     orderItemRetrieved = check rainierClientAllDataType->/orderitemextendeds/[orderItemExtended2.orderId]/[orderItemExtended2.itemId].get();
-    test:assertEquals(orderItemRetrieved, orderItemExtended3Retrieved);
+    test:assertEquals(orderItemRetrieved, orderItemExtended2Updated);
 }
