@@ -37,8 +37,8 @@ import io.ballerina.runtime.api.values.BObject;
 import io.ballerina.runtime.api.values.BStream;
 import io.ballerina.runtime.api.values.BString;
 import io.ballerina.runtime.api.values.BTypedesc;
+import io.ballerina.stdlib.persist.ModuleUtils;
 import io.ballerina.stdlib.persist.googlesheets.Constants;
-import io.ballerina.stdlib.persist.googlesheets.ModuleUtils;
 
 import static io.ballerina.stdlib.persist.Constants.ERROR;
 import static io.ballerina.stdlib.persist.Constants.KEY_FIELDS;
@@ -49,6 +49,7 @@ import static io.ballerina.stdlib.persist.Utils.getKey;
 import static io.ballerina.stdlib.persist.Utils.getMetadata;
 import static io.ballerina.stdlib.persist.Utils.getPersistClient;
 import static io.ballerina.stdlib.persist.Utils.getRecordTypeWithKeyFields;
+import static  io.ballerina.stdlib.persist.googlesheets.ModuleUtils.getModule;
 import static io.ballerina.stdlib.persist.googlesheets.Utils.getEntityFromStreamMethod;
 import static io.ballerina.stdlib.persist.googlesheets.Utils.getFieldTypes;
 
@@ -88,7 +89,7 @@ public class GoogleSheetsProcessor {
                     public void notifySuccess(Object o) {
                         BStream gSheetStream = (BStream) o;
                         BObject persistStream = ValueCreator.createObjectValue(
-                                ModuleUtils.getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
+                                getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
                                 gSheetStream, targetType,
                                 fields, includes, typeDescriptions, persistClient, null
                         );
@@ -137,7 +138,7 @@ public class GoogleSheetsProcessor {
                     public void notifySuccess(Object o) {
                         BStream gSheetStream = (BStream) o;
                         BObject persistStream = ValueCreator.createObjectValue(
-                                ModuleUtils.getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
+                                getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
                                 gSheetStream, targetType,
                                 fields, includes, typeDescriptions, persistClient, null
                         );
