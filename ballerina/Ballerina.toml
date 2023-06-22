@@ -17,3 +17,9 @@ groupId = "io.ballerina.stdlib"
 artifactId = "persist.googlesheets-native"
 version = "1.1.0"
 path = "../native/build/libs/persist.googlesheets-native-1.1.0-SNAPSHOT.jar"
+
+[[platform.java11.dependency]]
+groupId = "io.ballerina.stdlib"
+artifactId = "persist-native"
+version = "@persist.version@"
+path = "./lib/persist-native-@persist.native.version@.jar"
