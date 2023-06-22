@@ -28,4 +28,6 @@ public final class Constants {
     }
     public static final String PERSIST_GOOGLE_SHEETS_STREAM = "PersistGoogleSheetsStream";
     public static final String RUN_READ_TABLE_AS_STREAM_METHOD = "readTableAsStream";
+    public static final String PERSIST = "persist";
+    public static final String ERROR = "Error";
 }

@@ -23,6 +23,7 @@ import io.ballerina.runtime.api.Environment;
 import io.ballerina.runtime.api.Future;
 import io.ballerina.runtime.api.PredefinedTypes;
 import io.ballerina.runtime.api.async.Callback;
+import io.ballerina.runtime.api.creators.ErrorCreator;
 import io.ballerina.runtime.api.creators.TypeCreator;
 import io.ballerina.runtime.api.creators.ValueCreator;
 import io.ballerina.runtime.api.types.ErrorType;
@@ -87,19 +88,31 @@ public class GoogleSheetsProcessor {
                 null, null, new Callback() {
                     @Override
                     public void notifySuccess(Object o) {
-                        BStream gSheetStream = (BStream) o;
-                        BObject persistStream = ValueCreator.createObjectValue(
-                                getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
-                                gSheetStream, targetType,
-                                fields, includes, typeDescriptions, persistClient, null
-                        );
-
                         RecordType streamConstraint =
-                                (RecordType) TypeUtils.getReferredType(targetType.getDescribingType());
-                        balFuture.complete(
-                                ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
-                                        PredefinedTypes.TYPE_NULL), persistStream)
-                        );
+                                    (RecordType) TypeUtils.getReferredType(targetType.getDescribingType());
+                        if (o instanceof BError) {
+                            BError error = (BError) o;
+                            BObject persistStream = ValueCreator.createObjectValue(
+                                    getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
+                                    null, targetType,
+                                    fields, includes, typeDescriptions, persistClient, error
+                            );
+                            balFuture.complete(
+                                    ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
+                                            PredefinedTypes.TYPE_NULL), persistStream)
+                            );
+                        } else {
+                            BStream gSheetStream = (BStream) o;
+                            BObject persistStream = ValueCreator.createObjectValue(
+                                    getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
+                                    gSheetStream, targetType,
+                                    fields, includes, typeDescriptions, persistClient, null
+                            );
+                            balFuture.complete(
+                                    ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
+                                            PredefinedTypes.TYPE_NULL), persistStream)
+                            );
+                        }
                     }
 
                     @Override
@@ -136,19 +149,31 @@ public class GoogleSheetsProcessor {
                 null, null, new Callback() {
                     @Override
                     public void notifySuccess(Object o) {
-                        BStream gSheetStream = (BStream) o;
-                        BObject persistStream = ValueCreator.createObjectValue(
-                                getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
-                                gSheetStream, targetType,
-                                fields, includes, typeDescriptions, persistClient, null
-                        );
-
                         RecordType streamConstraint =
-                                (RecordType) TypeUtils.getReferredType(targetType.getDescribingType());
-                        balFuture.complete(
-                                ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
-                                        PredefinedTypes.TYPE_NULL), persistStream)
-                        );
+                                    (RecordType) TypeUtils.getReferredType(targetType.getDescribingType());
+                        if (o instanceof BError) {
+                            BError error = (BError) o;
+                            BObject persistStream = ValueCreator.createObjectValue(
+                                    getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
+                                    null, targetType,
+                                    fields, includes, typeDescriptions, persistClient, error
+                            );
+                            balFuture.complete(
+                                    ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
+                                            PredefinedTypes.TYPE_NULL), persistStream)
+                            );
+                        } else {
+                            BStream gSheetStream = (BStream) o;
+                            BObject persistStream = ValueCreator.createObjectValue(
+                                    getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
+                                    gSheetStream, targetType,
+                                    fields, includes, typeDescriptions, persistClient, null
+                            );
+                            balFuture.complete(
+                                    ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
+                                            PredefinedTypes.TYPE_NULL), persistStream)
+                            );
+                        }
                     }
                     @Override
                     public void notifyFailure(BError bError) {
@@ -170,7 +195,6 @@ public class GoogleSheetsProcessor {
         BTypedesc targetTypeWithIdFields = ValueCreator.createTypedescValue(recordTypeWithIdFields);
         ErrorType persistErrorType = TypeCreator.createErrorType(ERROR, ModuleUtils.getModule());
         Type unionType = TypeCreator.createUnionType(recordTypeWithIdFields, persistErrorType);
-
         BArray[] metadata = getMetadata(recordType);
         BArray fields = metadata[0];
         BArray includes = metadata[1];
@@ -183,7 +207,15 @@ public class GoogleSheetsProcessor {
                 null, null, new Callback() {
                     @Override
                     public void notifySuccess(Object o) {
-                        balFuture.complete(o);
+                        if (o instanceof BError &&
+                                !((BError) o).getType().getPkg().getName().equals(Constants.PERSIST)) {
+                            BError error = (BError) o;
+                            BError bError = ErrorCreator.createError(ModuleUtils.getModule(), Constants.ERROR,
+                             error.getErrorMessage(), null, null);
+                            balFuture.complete(bError);
+                        } else {
+                            balFuture.complete(o);
+                        }
                     }
 
                     @Override
