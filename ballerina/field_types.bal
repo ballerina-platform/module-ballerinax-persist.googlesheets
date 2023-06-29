@@ -30,3 +30,25 @@ public type SheetNumericType int|decimal|boolean|float;
 # Generic type that can used to store any of basic types supported by sheets
 #
 public type SheetBasicType int|string|decimal|boolean|float;
+
+# Record type to represent error response coming from appscript
+#
+# + done - Status of the response
+# + response - Record to store the response if the request is successful
+# + error - Record to store the error if the request is failed
+public type AppScriptJsonResponseRecord record {
+    boolean done;
+    json response?;
+    ErrorRecord 'error?;
+};
+public type ErrorRecord record {
+    string message;
+    int code;
+    ErrorDetails[] details;
+};
+
+public type ErrorDetails record {
+    string errorType;
+    string errorMessage;
+    string \@type;
+};
