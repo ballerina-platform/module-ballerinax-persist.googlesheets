@@ -165,7 +165,7 @@ public isolated client class GoogleSheetsRainierClient {
                 refreshToken: refreshToken
             }
         };
-        http:Client|error httpSheetsClient = new ("https://docs.google.com/spreadsheets", httpClientConfiguration);
+        http:Client|error httpSheetsClient = new (string `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values`, httpClientConfiguration);
         if httpSheetsClient is error {
             return <persist:Error>error(httpSheetsClient.message());
         }
