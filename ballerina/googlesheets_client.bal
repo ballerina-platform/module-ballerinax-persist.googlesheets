@@ -36,7 +36,8 @@ type RowValues record {
 public isolated client class GoogleSheetsClient {
 
     private final sheets:Client googleSheetClient;
-    private final http:Client httpClient;
+    private final http:Client httpSheetsClient;
+    private final http:Client httpAppScriptClient;
     private final string spreadsheetId;
     private final int sheetId;
     private final string entityName;
@@ -52,20 +53,21 @@ public isolated client class GoogleSheetsClient {
     # Initializes the `GSheetClient`.
     #
     # + googleSheetClient - The `sheets:Client`, which is used to execute google sheets operations
-    # + httpClient - The `http:Client`, which is used to execute http requests
+    # + httpSheetsClient - The `http:Client`, which is used to execute http requests
     # + sheetMetadata - Metadata of the entity
     # + spreadsheetId - Id of the spreadsheet
     # + sheetId - Id of the sheet
     # + return - A `persist:persist:Error` if the client creation fails
-    public isolated function init(sheets:Client googleSheetClient, http:Client httpClient, SheetMetadata & readonly sheetMetadata, string & readonly spreadsheetId, int & readonly sheetId) returns persist:Error? {
+    public isolated function init(sheets:Client googleSheetClient, http:Client httpSheetsClient, http:Client httpAppScriptClient, SheetMetadata & readonly sheetMetadata, string & readonly spreadsheetId, int & readonly sheetId) returns persist:Error? {
         self.entityName = sheetMetadata.entityName;
         self.spreadsheetId = spreadsheetId;
         self.tableName = sheetMetadata.tableName;
         self.fieldMetadata = sheetMetadata.fieldMetadata;
         self.range = sheetMetadata.range;
-        self.httpClient = httpClient;
+        self.httpSheetsClient = httpSheetsClient;
         self.keyFields = sheetMetadata.keyFields;
         self.googleSheetClient = googleSheetClient;
+        self.httpAppScriptClient = httpAppScriptClient;
         self.dataTypes = sheetMetadata.dataTypes;
         self.query = sheetMetadata.query;
         self.queryOne = sheetMetadata.queryOne;
@@ -81,14 +83,6 @@ public isolated client class GoogleSheetsClient {
         string[] fieldMetadataKeys = self.fieldMetadata.keys();
         foreach record {} rowValues in insertRecords {
             string metadataValue = self.generateMetadataValue(self.keyFields, rowValues);
-            sheets:DeveloperMetadataLookupFilter filter = {locationType: "ROW", metadataKey: self.tableName, metadataValue: metadataValue};
-            sheets:ValueRange[]|error output = self.googleSheetClient->getRowByDataFilter(self.spreadsheetId, self.sheetId, filter);
-            if output is error {
-                return <persist:Error>error(output.message());
-            }
-            if output.length() > 0 {
-                return persist:getAlreadyExistsError(self.entityName, self.generateKeyRecord(self.keyFields, rowValues));
-            }
             SheetBasicType[] values = [];
             foreach string key in fieldMetadataKeys {
                 string dataType = self.dataTypes.get(key).toString();
@@ -110,15 +104,34 @@ public isolated client class GoogleSheetsClient {
                     values.push(value);
                 }
             }
-            string[] splitedRange = re `:`.split(self.range);
-            sheets:A1Range a1Range = {sheetName: self.tableName, startIndex: splitedRange[0], endIndex: splitedRange[1]};
-            sheets:ValueRange|error insertedRow = self.googleSheetClient->appendValue(self.spreadsheetId, values, a1Range, "USER_ENTERED");
-            if insertedRow is error {
-                return <persist:Error>error(insertedRow.message());
-            }
-            error? response = self.googleSheetClient->setRowMetaData(self.spreadsheetId, self.sheetId, insertedRow.rowPosition, "DOCUMENT", self.tableName, metadataValue);
+            string a1Range = string `${self.tableName}!${self.range}`;
+            http:Response|error response = self.httpAppScriptClient->/.post({
+                "function": "myFunction",
+                "parameters": [
+                    self.tableName, metadataValue, values, self.spreadsheetId, a1Range, self.sheetId
+                ]
+            });
             if response is error {
                 return <persist:Error>error(response.message());
+            }
+            json|error responseJson = response.getJsonPayload();
+            if responseJson is error {
+                return <persist:Error>error(responseJson.message());
+            }
+            AppScriptJsonResponseRecord|error responseJsonRecord = responseJson.cloneWithType();
+            if responseJsonRecord is error {
+                return <persist:Error>error(responseJsonRecord.message());
+            }
+            if responseJsonRecord.done == false {
+                return <persist:Error>error("Error: Connection to the AppScript API failed. ");
+            }
+            ErrorRecord? errorRecord = responseJsonRecord.'error;
+            if errorRecord !is () {
+                if errorRecord.details[0].errorMessage.includes("Duplicate Record", 0) {
+                    return <persist:AlreadyExistsError>error(string `Duplicate key: ${self.generateKeyArrayString(self.keyFields, rowValues)}`);
+                } else {
+                    return <persist:Error>error(string `Error: ${errorRecord.details[0].errorMessage} on ${self.generateKeyArrayString(self.keyFields, rowValues)}`);
+                }
             }
         }
     }
@@ -167,7 +180,7 @@ public isolated client class GoogleSheetsClient {
             return <persist:Error>error(encodedQuery.message());
         }
         http:QueryParams queries = {"gid": self.sheetId, "range": self.range, "tq": <string>encodedQuery, "tqx": "out:csv"};
-        http:Response|error response = self.httpClient->/d/[self.spreadsheetId]/gviz/tq(params = queries);
+        http:Response|error response = self.httpSheetsClient->/d/[self.spreadsheetId]/gviz/tq(params = queries);
         if response is error {
             return <persist:Error>error(response.message());
         }
