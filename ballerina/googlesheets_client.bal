@@ -106,7 +106,7 @@ public isolated client class GoogleSheetsClient {
             }
             string a1Range = string `${self.tableName}!${self.range}`;
             http:Response|error response = self.httpAppScriptClient->/.post({
-                "function": "myFunction",
+                "function": "insertRecord",
                 "parameters": [
                     self.tableName, metadataValue, values, self.spreadsheetId, a1Range, self.sheetId
                 ]
@@ -182,7 +182,7 @@ public isolated client class GoogleSheetsClient {
         }
         string getSheetValuesPath = string `/${self.tableName}!${encodedRange}?dateTimeRenderOption=FORMATTED_STRING&majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE`;
         json|error response = self.sendRequest(self.httpSheetsClient, getSheetValuesPath);
-        if (response is error) {
+        if response is error {
             return <persist:Error>response;
         } 
         if response.values !is error {
@@ -557,10 +557,10 @@ public isolated client class GoogleSheetsClient {
 
     private isolated function sendRequest(http:Client httpClient, string path) returns json | error {
         http:Response|error httpResponse = httpClient->get(path);
-        if (httpResponse is http:Response) {
+        if httpResponse is http:Response {
             int statusCode = httpResponse.statusCode;
             json | error jsonResponse = httpResponse.getJsonPayload();
-            if (jsonResponse is json) {
+            if jsonResponse is json {
                 error? validateStatusCodeRes = self.validateStatusCode(jsonResponse, statusCode);
                 if (validateStatusCodeRes is error) {
                     return validateStatusCodeRes;
@@ -575,12 +575,12 @@ public isolated client class GoogleSheetsClient {
     }
 
     private isolated function validateStatusCode(json response, int statusCode) returns error? {
-        if (!(statusCode == http:STATUS_OK)) {
+        if statusCode != http:STATUS_OK {
             return self.getSpreadsheetError(response);
         }
     }   
     isolated function getSpreadsheetError(json|error errorResponse) returns error {
-        if (errorResponse is json) {
+        if errorResponse is json {
                 return error(errorResponse.toString());
         } else {
                 return errorResponse;
@@ -591,7 +591,7 @@ public isolated client class GoogleSheetsClient {
         string[][] values = [];
         json|error jsonResponseValues = jsonResponse.values;
         json[] jsonValues = [];
-        if (jsonResponseValues is json) {
+        if jsonResponseValues is json {
             jsonValues = <json[]>jsonResponseValues;
         }
         foreach json value in jsonValues {
