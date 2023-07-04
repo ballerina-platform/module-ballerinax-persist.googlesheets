@@ -27,13 +27,21 @@ import io.ballerina.runtime.api.types.MapType;
 import io.ballerina.runtime.api.types.RecordType;
 import io.ballerina.runtime.api.types.Type;
 import io.ballerina.runtime.api.utils.StringUtils;
+import io.ballerina.runtime.api.utils.TypeUtils;
+import io.ballerina.runtime.api.values.BArray;
+import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BMap;
+import io.ballerina.runtime.api.values.BObject;
+import io.ballerina.runtime.api.values.BStream;
 import io.ballerina.runtime.api.values.BString;
+import io.ballerina.runtime.api.values.BTypedesc;
 
 import java.util.Locale;
 import java.util.Map;
 
 import static io.ballerina.runtime.api.utils.StringUtils.fromString;
+import static io.ballerina.stdlib.persist.googlesheets.Constants.PERSIST_GOOGLE_SHEETS_STREAM;
+import static io.ballerina.stdlib.persist.googlesheets.ModuleUtils.getModule;
 
 /**
  * This class has the utility methods required for the Persist module.
@@ -57,5 +65,27 @@ public class Utils {
             typeMap.put(StringUtils.fromString(fieldName), StringUtils.fromString(type.getName()));
         }
         return typeMap;
+    }
+
+    private static BObject createPersistGSheetsStream(BStream sqlStream, BTypedesc targetType, BArray fields,
+                                                      BArray includes, BArray typeDescriptions, BObject persistClient,
+                                                      BError persistError) {
+        return ValueCreator.createObjectValue(getModule(), PERSIST_GOOGLE_SHEETS_STREAM,
+                sqlStream, targetType, fields, includes, typeDescriptions, persistClient, persistError);
+    }
+
+    private static BStream createPersistGSheetsStreamValue(BTypedesc targetType, BObject persistSQLStream) {
+        RecordType streamConstraint =
+                (RecordType) TypeUtils.getReferredType(targetType.getDescribingType());
+        return ValueCreator.createStreamValue(
+                TypeCreator.createStreamType(streamConstraint, PredefinedTypes.TYPE_NULL), persistSQLStream);
+    }
+
+    public static BStream createPersistGSheetsStreamValue(BStream sqlStream, BTypedesc targetType, BArray fields,
+                                                          BArray includes, BArray typeDescriptions,
+                                                          BObject persistClient, BError persistError) {
+        BObject persistSQLStream = createPersistGSheetsStream(sqlStream, targetType, fields, includes, typeDescriptions,
+                persistClient, persistError);
+        return createPersistGSheetsStreamValue(targetType, persistSQLStream);
     }
 }
