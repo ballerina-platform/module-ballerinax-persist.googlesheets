@@ -176,7 +176,7 @@ public isolated client class GoogleSheetsClient {
             string[] responseRows = re `\n`.split(textResponse);
             record {}[] rowTable = [];
             if responseRows.length() == 0 {
-                return <persist:Error>error("Error: the spreadsheet is not initialised correctly.");
+                return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Spreadsheet is empty.");
             } else if responseRows.length() == 1 {
                 return rowTable.toStream();
             }
@@ -186,13 +186,13 @@ public isolated client class GoogleSheetsClient {
                 record {} rowArray = {};
                 string[] rowValues = re `,`.split(rowString);
                 if columnNames.length() != self.dataTypes.length() {
-                    return <persist:Error>error("Error: the spreadsheet is not initialised correctly.");
+                    return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Number of columns in the sheet does not match with the entity. ");
                 }
                 foreach string rowValue in rowValues {
                     string columnName = re ` `.replaceAll(re `"`.replaceAll(columnNames[i], ""), "");
                     string value = re `"`.replaceAll(rowValue, "");
                     if !self.dataTypes.hasKey(columnName) {
-                        return <persist:Error>error("Error: the spreadsheet is not initialised correctly.");
+                        return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Sheets columns do not match with the enitity. ");
                     }
                     string dataType = self.dataTypes.get(columnName).toString();
                     if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
