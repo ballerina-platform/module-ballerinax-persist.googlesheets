@@ -199,7 +199,7 @@ function gsheetsCompositeKeyNegativeGetTest() returns error? {
     GooglesheetsNegativeClient gsclient = check new ();
     OrderItemFalse|error orderItem = gsclient->/orderitemfalses/[orderItem1.orderId]/[orderItem1.itemId].get();
     if orderItem is persist:Error {
-        test:assertEquals(orderItem.message(), "Error: the spreadsheet is not initialised correctly.");
+        test:assertEquals(orderItem.message(), "Error: the spreadsheet is not initialised correctly. Number of columns in the sheet does not match with the entity. ");
     } else {
         test:assertFail("Error expected.");
     }
@@ -215,7 +215,7 @@ function gsheetsCompositeKeyNegativeGetStreamTest() returns error? {
     stream<OrderItemFalse, error?> orderItemStream = gsclient->/orderitemfalses.get();
     record {|OrderItemFalse value;|}|error? orderItemFalse = orderItemStream.next();
     if orderItemFalse is persist:Error {
-        test:assertEquals(orderItemFalse.message(), "Error: the spreadsheet is not initialised correctly.");
+        test:assertEquals(orderItemFalse.message(), "Error: the spreadsheet is not initialised correctly. Number of columns in the sheet does not match with the entity. ");
     } else {
         test:assertFail("Error expected.");
     }
