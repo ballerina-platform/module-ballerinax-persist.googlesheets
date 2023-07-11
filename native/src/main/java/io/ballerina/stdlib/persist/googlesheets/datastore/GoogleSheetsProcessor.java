@@ -16,7 +16,6 @@
  *  under the License.
  */
 
-
 package io.ballerina.stdlib.persist.googlesheets.datastore;
 
 import io.ballerina.runtime.api.Environment;
@@ -50,20 +49,21 @@ import static io.ballerina.stdlib.persist.Utils.getKey;
 import static io.ballerina.stdlib.persist.Utils.getMetadata;
 import static io.ballerina.stdlib.persist.Utils.getPersistClient;
 import static io.ballerina.stdlib.persist.Utils.getRecordTypeWithKeyFields;
-import static  io.ballerina.stdlib.persist.googlesheets.ModuleUtils.getModule;
+import static io.ballerina.stdlib.persist.googlesheets.ModuleUtils.getModule;
 import static io.ballerina.stdlib.persist.googlesheets.Utils.getEntityFromStreamMethod;
 import static io.ballerina.stdlib.persist.googlesheets.Utils.getFieldTypes;
 
-
 /**
- * This class provides the GoogleSheets query processing implementations for persistence.
+ * This class provides the GoogleSheets query processing implementations for
+ * persistence.
  *
  * @since 0.3.0
  */
 
 public class GoogleSheetsProcessor {
 
-    private GoogleSheetsProcessor() {};
+    private GoogleSheetsProcessor() {
+    };
 
     public static BStream query(Environment env, BObject client, BTypedesc targetType) {
         BString entity = getEntity(env);
@@ -88,8 +88,8 @@ public class GoogleSheetsProcessor {
                 null, null, new Callback() {
                     @Override
                     public void notifySuccess(Object o) {
-                        RecordType streamConstraint =
-                                    (RecordType) TypeUtils.getReferredType(targetType.getDescribingType());
+                        RecordType streamConstraint = (RecordType) TypeUtils
+                                .getReferredType(targetType.getDescribingType());
                         if (o instanceof BError) {
                             BError error;
                             if (!((BError) o).getType().getPkg().getName().equals(Constants.PERSIST)) {
@@ -98,54 +98,32 @@ public class GoogleSheetsProcessor {
                             } else {
                                 error = (BError) o;
                             }
-                            BObject persistStream = ValueCreator.createObjectValue(
-                                    getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
-                                    null, targetType,
-                                    fields, includes, typeDescriptions, persistClient, error
-                            );
                             balFuture.complete(
-                                    ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
-                                            PredefinedTypes.TYPE_NULL), persistStream)
-                            );
+                                ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
+                                    PredefinedTypes.TYPE_NULL), ValueCreator.createObjectValue(getModule(),
+                                    Constants.PERSIST_GOOGLE_SHEETS_STREAM, null, targetType,
+                                    fields, includes, typeDescriptions, persistClient, error)));
                         } else {
-                            BStream gSheetStream = (BStream) o;
-                            BObject persistStream = ValueCreator.createObjectValue(
-                                    getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
-                                    gSheetStream, targetType,
-                                    fields, includes, typeDescriptions, persistClient, null
-                            );
                             balFuture.complete(
-                                    ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
-                                            PredefinedTypes.TYPE_NULL), persistStream)
-                            );
+                                ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
+                                    PredefinedTypes.TYPE_NULL), ValueCreator.createObjectValue(getModule(),
+                                    Constants.PERSIST_GOOGLE_SHEETS_STREAM, (BStream) o, targetType, fields,
+                                    includes, typeDescriptions, persistClient, null)));
                         }
                     }
 
                     @Override
                     public void notifyFailure(BError bError) {
-                        BError error;
-                        if (!bError.getType().getPkg().getName().equals(Constants.PERSIST)) {
-                            error = ErrorCreator.createError(ModuleUtils.getModule(), Constants.ERROR,
+                        BError error = ErrorCreator.createError(ModuleUtils.getModule(), Constants.ERROR,
                                     bError.getErrorMessage(), bError.getCause(), null);
-                        } else {
-                            error = bError;
-                        }
-                        RecordType streamConstraint =
-                                (RecordType) TypeUtils.getReferredType(targetType.getDescribingType());
-                        BObject persistStream = ValueCreator.createObjectValue(
-                                getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
-                                null, targetType,
-                                fields, includes, typeDescriptions, persistClient, error
-                        );
                         balFuture.complete(
-                                ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
-                                        PredefinedTypes.TYPE_NULL), persistStream)
-                        );
+                                ValueCreator.createStreamValue(TypeCreator.createStreamType((RecordType) TypeUtils
+                                    .getReferredType(targetType.getDescribingType()), PredefinedTypes.TYPE_NULL),
+                                    ValueCreator.createObjectValue(getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM, 
+                                    null, targetType, fields, includes, typeDescriptions, persistClient, error)));
                     }
-                }, null, streamTypeWithIdFields,
-                targetTypeWithIdFields, true, typeMap, true, fields, true, includes, true
-        );
-
+                }, null, streamTypeWithIdFields, targetTypeWithIdFields, true,
+                typeMap, true, fields, true, includes, true);
         return null;
     }
 
@@ -172,8 +150,8 @@ public class GoogleSheetsProcessor {
                 null, null, new Callback() {
                     @Override
                     public void notifySuccess(Object o) {
-                        RecordType streamConstraint =
-                                    (RecordType) TypeUtils.getReferredType(targetType.getDescribingType());
+                        RecordType streamConstraint = (RecordType) TypeUtils
+                                .getReferredType(targetType.getDescribingType());
                         if (o instanceof BError) {
                             BError error;
                             if (!((BError) o).getType().getPkg().getName().equals(Constants.PERSIST)) {
@@ -182,42 +160,27 @@ public class GoogleSheetsProcessor {
                             } else {
                                 error = (BError) o;
                             }
-                            BObject persistStream = ValueCreator.createObjectValue(
-                                    getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
-                                    null, targetType,
-                                    fields, includes, typeDescriptions, persistClient, error
-                            );
                             balFuture.complete(
-                                    ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
-                                            PredefinedTypes.TYPE_NULL), persistStream)
-                            );
+                                ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
+                                    PredefinedTypes.TYPE_NULL), ValueCreator.createObjectValue(getModule(),
+                                    Constants.PERSIST_GOOGLE_SHEETS_STREAM, null, targetType,
+                                    fields, includes, typeDescriptions, persistClient, error)));
                         } else {
-                            BStream gSheetStream = (BStream) o;
-                            BObject persistStream = ValueCreator.createObjectValue(
-                                    getModule(), Constants.PERSIST_GOOGLE_SHEETS_STREAM,
-                                    gSheetStream, targetType,
-                                    fields, includes, typeDescriptions, persistClient, null
-                            );
                             balFuture.complete(
-                                    ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
-                                            PredefinedTypes.TYPE_NULL), persistStream)
-                            );
+                                ValueCreator.createStreamValue(TypeCreator.createStreamType(streamConstraint,
+                                    PredefinedTypes.TYPE_NULL), ValueCreator.createObjectValue(getModule(),
+                                    Constants.PERSIST_GOOGLE_SHEETS_STREAM, (BStream) o, targetType,
+                                    fields, includes, typeDescriptions, persistClient, null)));
                         }
                     }
+
                     @Override
                     public void notifyFailure(BError bError) {
-                        BError error;
-                        if (!bError.getType().getPkg().getName().equals(Constants.PERSIST)) {
-                            error = ErrorCreator.createError(ModuleUtils.getModule(), Constants.ERROR,
-                                    bError.getErrorMessage(), bError.getCause(), null);
-                        } else {
-                            error = bError;
-                        }
-                        balFuture.complete(error);
+                        balFuture.complete(ErrorCreator.createError(ModuleUtils.getModule(), Constants.ERROR,
+                                    bError.getErrorMessage(), bError.getCause(), null));
                     }
-                }, null, streamTypeWithIdFields,
-                targetTypeWithIdFields, true, typeMap, true, fields, true, includes, true
-        );
+                }, null, streamTypeWithIdFields, targetTypeWithIdFields, true, typeMap, true, fields, true, includes,
+                true);
         return null;
     }
 
@@ -246,7 +209,7 @@ public class GoogleSheetsProcessor {
                         if (o instanceof BError &&
                                 !((BError) o).getType().getPkg().getName().equals(Constants.PERSIST)) {
                             BError bError = ErrorCreator.createError(ModuleUtils.getModule(), Constants.ERROR,
-                             ((BError) o).getErrorMessage(), ((BError) o).getCause(), null);
+                                    ((BError) o).getErrorMessage(), ((BError) o).getCause(), null);
                             balFuture.complete(bError);
                         } else {
                             balFuture.complete(o);
@@ -255,19 +218,12 @@ public class GoogleSheetsProcessor {
 
                     @Override
                     public void notifyFailure(BError error) {
-                        BError bError;
-                        if (!error.getType().getPkg().getName().equals(Constants.PERSIST)) {
-                            bError = ErrorCreator.createError(ModuleUtils.getModule(), Constants.ERROR,
-                                    error.getErrorMessage(), null, null);
-                        } else {
-                            bError = error;
-                        }
-                        balFuture.complete(bError);
+                        balFuture.complete(ErrorCreator.createError(ModuleUtils.getModule(), Constants.ERROR,
+                                    error.getErrorMessage(), null, null));
                     }
-                },  null, unionType,
+                }, null, unionType,
                 targetType, true, targetTypeWithIdFields, true, typeMap, true, key, true, fields, true, includes, true,
-                typeDescriptions, true
-        );
+                typeDescriptions, true);
         return null;
     }
 }
