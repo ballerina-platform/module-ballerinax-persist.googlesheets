@@ -16,7 +16,6 @@
  *  under the License.
  */
 
-
 package io.ballerina.stdlib.persist.googlesheets.datastore;
 
 import io.ballerina.runtime.api.Environment;
@@ -56,16 +55,17 @@ import static io.ballerina.stdlib.persist.Utils.getTransactionContextProperties;
 import static io.ballerina.stdlib.persist.googlesheets.Utils.getEntityFromStreamMethod;
 import static io.ballerina.stdlib.persist.googlesheets.Utils.getFieldTypes;
 
-
 /**
- * This class provides the GoogleSheets query processing implementations for persistence.
+ * This class provides the GoogleSheets query processing implementations for
+ * persistence.
  *
  * @since 0.3.0
  */
 
 public class GoogleSheetsProcessor {
 
-    private GoogleSheetsProcessor() {};
+    private GoogleSheetsProcessor() {
+    };
 
     public static BStream query(Environment env, BObject client, BTypedesc targetType) {
         // This method will return `stream<targetType, persist:Error?>`
