@@ -171,3 +171,29 @@ public type OrderItemUpdate record {|
     string notes?;
 |};
 
+public type OrderItemFalse record {|
+    readonly string orderId;
+    readonly string itemId;
+    int quantity;
+    string notes;
+    string notesdummy;
+|};
+
+public type OrderItemFalseOptionalized record {|
+    string orderId?;
+    string itemId?;
+    int quantity?;
+    string notes?;
+    string notesdummy?;
+|};
+
+public type OrderItemFalseTargetType typedesc<OrderItemFalseOptionalized>;
+
+public type OrderItemFalseInsert OrderItemFalse;
+
+public type OrderItemFalseUpdate record {|
+    int quantity?;
+    string notes?;
+    string notesdummy?;
+|};
+
