@@ -189,3 +189,34 @@ function gsheetsCompositeKeyDeleteTestNegative() returns error? {
         test:assertFail("Error expected.");
     }
 }
+
+@test:Config {
+    groups: ["composite-key", "google-sheets"],
+    dependsOn: [gsheetsCompositeKeyDeleteTestNegative],
+    enable: true
+}
+function gsheetsCompositeKeyNegativeGetTest() returns error? {
+    GooglesheetsNegativeClient gsclient = check new ();
+    OrderItemFalse|error orderItem = gsclient->/orderitemfalses/[orderItem1.orderId]/[orderItem1.itemId].get();
+    if orderItem is persist:Error {
+        test:assertEquals(orderItem.message(), "Error: the spreadsheet is not initialised correctly. Number of columns in the sheet does not match with the entity. ");
+    } else {
+        test:assertFail("Error expected.");
+    }
+}
+
+@test:Config {
+    groups: ["composite-key", "google-sheets"],
+    dependsOn: [gsheetsCompositeKeyNegativeGetTest],
+    enable: true
+}
+function gsheetsCompositeKeyNegativeGetStreamTest() returns error? {
+    GooglesheetsNegativeClient gsclient = check new ();
+    stream<OrderItemFalse, error?> orderItemStream = gsclient->/orderitemfalses.get();
+    record {|OrderItemFalse value;|}|error? orderItemFalse = orderItemStream.next();
+    if orderItemFalse is persist:Error {
+        test:assertEquals(orderItemFalse.message(), "Error: the spreadsheet is not initialised correctly. Number of columns in the sheet does not match with the entity. ");
+    } else {
+        test:assertFail("Error expected.");
+    }
+}
