@@ -176,13 +176,13 @@ public isolated client class GoogleSheetsClient {
             values = self.convertToArray(response);
         }
         if values.length() == 0 {
-            return <persist:Error>error("Error: the spreadsheet is not initialised correctly.");
+            return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Spreadsheet is empty.");
         } else if values.length() == 1 {
             return rowTable.toStream();
         }
         string[] columnNames = values[0];
         if columnNames.length() != self.dataTypes.length() {
-            return <persist:Error>error("Error: the spreadsheet is not initialised correctly.");
+            return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Number of columns in the sheet does not match with the entity. ");
         }
         foreach string[] rowValue in values.slice(1) {
             record {} rowArray = {};
