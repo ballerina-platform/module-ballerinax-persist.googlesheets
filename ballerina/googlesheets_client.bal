@@ -542,4 +542,54 @@ public isolated client class GoogleSheetsClient {
         }
     }
 
+    private isolated function sendRequest(http:Client httpClient, string path) returns json | error {
+        http:Response|error httpResponse = httpClient->get(path);
+        if httpResponse is http:Response {
+            int statusCode = httpResponse.statusCode;
+            json | error jsonResponse = httpResponse.getJsonPayload();
+            if jsonResponse is json {
+                error? validateStatusCodeRes = self.validateStatusCode(jsonResponse, statusCode);
+                if (validateStatusCodeRes is error) {
+                    return validateStatusCodeRes;
+                }
+                return jsonResponse;
+            } else {
+                return self.getSpreadsheetError(jsonResponse);
+            }
+        } else {
+            return self.getSpreadsheetError(<json|error>httpResponse);
+        }
+    }
+
+    private isolated function validateStatusCode(json response, int statusCode) returns error? {
+        if statusCode != http:STATUS_OK {
+            return self.getSpreadsheetError(response);
+        }
+    }   
+    isolated function getSpreadsheetError(json|error errorResponse) returns error {
+        if errorResponse is json {
+                return error(errorResponse.toString());
+        } else {
+                return errorResponse;
+        }
+    }
+
+    private isolated function convertToArray(json jsonResponse) returns string[][] {
+        string[][] values = [];
+        json|error jsonResponseValues = jsonResponse.values;
+        json[] jsonValues = [];
+        if jsonResponseValues is json {
+            jsonValues = <json[]>jsonResponseValues;
+        }
+        foreach json value in jsonValues {
+            json[] jsonValArray = <json[]>value;
+            string[] temp = [];
+            foreach json v in jsonValArray {
+                temp.push(v.toString());
+            }
+            values.push(temp);
+        }
+        return values;
+    }
+
 }
