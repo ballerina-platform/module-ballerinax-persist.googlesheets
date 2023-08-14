@@ -26,7 +26,7 @@ public isolated client class GoogleSheetsRainierClientAllDataType {
 
     private final sheets:Client googleSheetClient;
 
-    private final http:Client httpClient;
+    private final http:Client httpSheetsClient;
 
     private final map<GoogleSheetsClient> persistClients;
 
@@ -95,7 +95,7 @@ public isolated client class GoogleSheetsRainierClientAllDataType {
         self.googleSheetClient = googleSheetClient;
         self.httpSheetsClient = httpSheetsClient;
         map<int> sheetIds = check getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
-        self.persistClients = {[ORDER_ITEM_EXTENDED] : check new (self.googleSheetClient, self.httpClient, metadata.get(ORDER_ITEM_EXTENDED).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM_EXTENDED).cloneReadOnly())};
+        self.persistClients = {[ORDER_ITEM_EXTENDED] : check new (self.googleSheetClient, self.httpSheetsClient, metadata.get(ORDER_ITEM_EXTENDED).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM_EXTENDED).cloneReadOnly())};
     }
 
     isolated resource function get orderitemextendeds(OrderItemExtendedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
