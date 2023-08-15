@@ -15,12 +15,14 @@
 // under the License.
 
 import ballerina/test;
+import ballerina/lang.runtime;
 
 @test:Config {
     groups: ["composite-key", "google-sheets"],
     enable: true
 }
 function gsheetsAllDataTypeCreateTest() returns error? {
+    runtime:sleep(25);
     [string, string][] ids = check rainierClientAllDataType->/orderitemextendeds.post([orderItemExtended1, orderItemExtended2]);
     test:assertEquals(ids, [[orderItemExtended1.orderId, orderItemExtended1.itemId], [orderItemExtended2.orderId, orderItemExtended2.itemId]]);
 
