@@ -568,9 +568,9 @@ public isolated client class GoogleSheetsClient {
     }   
     isolated function getSpreadsheetError(json|error errorResponse) returns error {
         if errorResponse is json {
-                return error(errorResponse.toString());
+            return error(errorResponse.toString());
         } else {
-                return errorResponse;
+            return errorResponse;
         }
     }
 
