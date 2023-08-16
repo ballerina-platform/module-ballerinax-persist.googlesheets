@@ -24,7 +24,7 @@ import ballerina/lang.runtime;
     enable: true
 }
 function gsheetsEmployeeCreateTest() returns error? {
-    runtime:sleep(25);
+    runtime:sleep(40);
     string[] empNos = check rainierClient->/employees.post([employee1]);
     test:assertEquals(empNos, [employee1.empNo]);
 

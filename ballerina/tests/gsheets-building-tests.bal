@@ -24,7 +24,7 @@ import ballerina/lang.runtime;
     enable: true
 }
 function gsheetsBuildingCreateTest() returns error? {
-    runtime:sleep(25);
+    runtime:sleep(40);
     string[] buildingCodes = check rainierClient->/buildings.post([building1]);
     test:assertEquals(buildingCodes, [building1.buildingCode]);
 

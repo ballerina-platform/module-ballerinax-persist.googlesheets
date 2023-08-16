@@ -22,7 +22,7 @@ import ballerina/lang.runtime;
     enable: true
 }
 function gsheetsAllDataTypeCreateTest() returns error? {
-    runtime:sleep(25);
+    runtime:sleep(40);
     [string, string][] ids = check rainierClientAllDataType->/orderitemextendeds.post([orderItemExtended1, orderItemExtended2]);
     test:assertEquals(ids, [[orderItemExtended1.orderId, orderItemExtended1.itemId], [orderItemExtended2.orderId, orderItemExtended2.itemId]]);
 

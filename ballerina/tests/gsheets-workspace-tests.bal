@@ -24,7 +24,7 @@ import ballerina/lang.runtime;
     enable: true
 }
 function gsheetsWorkspaceCreateTest() returns error? {
-    runtime:sleep(25);
+    runtime:sleep(40);
     string[] workspaceIds = check rainierClient->/workspaces.post([workspace1]);
     test:assertEquals(workspaceIds, [workspace1.workspaceId]);
 

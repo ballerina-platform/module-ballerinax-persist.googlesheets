@@ -24,7 +24,7 @@ import ballerina/lang.runtime;
     enable: true
 }
 function gsheetsDepartmentCreateTest() returns error? {
-    runtime:sleep(25);
+    runtime:sleep(40);
     string[] deptNos = check rainierClient->/departments.post([department1]);
     test:assertEquals(deptNos, [department1.deptNo]);
 
