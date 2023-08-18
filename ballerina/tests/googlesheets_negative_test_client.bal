@@ -15,7 +15,7 @@ public isolated client class GooglesheetsNegativeClient {
 
     private final sheets:Client googleSheetClient;
 
-    private final http:Client httpClient;
+    private final http:Client httpSheetsClient;
 
     private final map<GoogleSheetsClient> persistClients;
 
@@ -61,18 +61,18 @@ public isolated client class GooglesheetsNegativeClient {
                 refreshToken: refreshToken
             }
         };
-        http:Client|error httpClient = new ("https://docs.google.com/spreadsheets", httpClientConfiguration);
-        if httpClient is error {
-            return <persist:Error>error(httpClient.message());
+        http:Client|error httpSheetsClient = new (string `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values`, httpClientConfiguration);
+        if httpSheetsClient is error {
+            return <persist:Error>error(httpSheetsClient.message());
         }
         sheets:Client|error googleSheetClient = new (sheetsClientConfig);
         if googleSheetClient is error {
             return <persist:Error>error(googleSheetClient.message());
         }
         self.googleSheetClient = googleSheetClient;
-        self.httpClient = httpClient;
+        self.httpSheetsClient = httpSheetsClient;
         map<int> sheetIds = check getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
-        self.persistClients = {[ORDER_ITEM_FALSE] : check new (self.googleSheetClient, self.httpClient, metadata.get(ORDER_ITEM_FALSE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM_FALSE).cloneReadOnly())};
+        self.persistClients = {[ORDER_ITEM_FALSE] : check new (self.googleSheetClient, self.httpSheetsClient, metadata.get(ORDER_ITEM_FALSE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM_FALSE).cloneReadOnly())};
     }
 
     isolated resource function get orderitemfalses(OrderItemFalseTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {
