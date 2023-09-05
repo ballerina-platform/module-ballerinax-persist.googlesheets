@@ -13,12 +13,11 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
-import ballerina/persist;
-import ballerina/url;
 import ballerina/http;
-import ballerina/time;
 import ballerina/lang.regexp;
+import ballerina/persist;
+import ballerina/time;
+import ballerina/url;
 import ballerinax/googleapis.sheets;
 
 type Table record {
@@ -160,18 +159,19 @@ public isolated client class GoogleSheetsClient {
     # + fields - The fields to be retrieved
     # + include - The associations to be retrieved
     # + return - A stream of records in the `rowType` type or a `persist:Error` if the operation fails
-    public isolated function readTableAsStream(typedesc<record {}> rowType, map<anydata> typeMap, string[] fields = [], string[] include = []) returns stream<record {}, persist:Error?>|persist:Error {
+    public isolated function readTableAsStream(typedesc<record {}> rowType, map<anydata> typeMap, string[] fields = [], string[] include = []) returns stream<record {|anydata...;|}, persist:Error?>|error {
         string[][] values = [];
         record {}[] rowTable = [];
         string|error encodedRange = url:encode(self.range, "UTF-8");
         if encodedRange is error {
-            return <persist:Error>error(encodedRange.message());
+            return error persist:Error(encodedRange.message());
         }
         string getSheetValuesPath = string `/${self.tableName}!${encodedRange}?dateTimeRenderOption=FORMATTED_STRING&majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE`;
         json|error response = self.sendRequest(self.httpSheetsClient, getSheetValuesPath);
+
         if response is error {
-            return <persist:Error>response;
-        } 
+            return error persist:Error(response.message());
+        }
         if response.values !is error {
             values = self.convertToArray(response);
         }
@@ -182,7 +182,7 @@ public isolated client class GoogleSheetsClient {
         }
         string[] columnNames = values[0];
         if columnNames.length() != self.dataTypes.length() {
-            return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Number of columns in the sheet does not match with the entity. ");
+            return error persist:Error("Error: the spreadsheet is not initialised correctly. Number of columns in the sheet does not match with the entity. ");
         }
         foreach string[] rowValue in values.slice(1) {
             record {} rowArray = {};
@@ -190,7 +190,7 @@ public isolated client class GoogleSheetsClient {
             foreach string columnName in columnNames {
                 string columnNameProcessed = re ` `.replaceAll(re `"`.replaceAll(columnName, ""), "");
                 if !self.dataTypes.hasKey(columnName) {
-                    return <persist:Error>error(string `Error: the spreadsheet is not initialised correctly. Column ${columnName} is not defined in the data types.`);
+                    return error persist:Error(string `Error: the spreadsheet is not initialised correctly. Column ${columnName} is not defined in the data types.`);
                 }
                 string dataType = self.dataTypes.get(columnNameProcessed).toString();
                 string value = re `"`.replaceAll(rowValue[columnIndex], "");
@@ -210,7 +210,7 @@ public isolated client class GoogleSheetsClient {
                 } else {
                     SheetFieldType|error typedValue = self.dataConverter(value, dataType);
                     if typedValue is error {
-                        return <persist:Error>error(typedValue.message());
+                        return error persist:Error(typedValue.message());
                     }
                     rowArray[columnName] = typedValue;
                 }
@@ -443,25 +443,26 @@ public isolated client class GoogleSheetsClient {
     }
 
     private isolated function civilToString(time:Civil civil) returns string|error {
-        string civilString = string `${civil.year}-${(civil.month.abs() > 9? civil.month: string `0${civil.month}`)}-${(civil.day.abs() > 9? civil.day: string `0${civil.day}`)}`;
-        civilString += string `T${(civil.hour.abs() > 9? civil.hour: string `0${civil.hour}`)}:${(civil.minute.abs() > 9? civil.minute: string `0${civil.minute}`)}`;
+        string civilString = string `${civil.year}-${(civil.month.abs() > 9 ? civil.month : string `0${civil.month}`)}-${(civil.day.abs() > 9 ? civil.day : string `0${civil.day}`)}`;
+        civilString += string `T${(civil.hour.abs() > 9 ? civil.hour : string `0${civil.hour}`)}:${(civil.minute.abs() > 9 ? civil.minute : string `0${civil.minute}`)}`;
         if civil.second !is () {
             time:Seconds seconds = <time:Seconds>civil.second;
-            civilString += string `:${(seconds.abs() > (check decimal:fromString("9"))? seconds: string `0${seconds}`)}`;
+            civilString += string `:${(seconds.abs() > (check decimal:fromString("9")) ? seconds : string `0${seconds}`)}`;
         }
         if civil.utcOffset !is () {
             time:ZoneOffset zoneOffset = <time:ZoneOffset>civil.utcOffset;
-            civilString += (zoneOffset.hours >= 0? "+" : "-");
-            civilString += string `${zoneOffset.hours.abs() > 9? zoneOffset.hours.abs() : string `0${zoneOffset.hours.abs()}`}`;
-            civilString += string `:${(zoneOffset.minutes.abs() > 9? zoneOffset.minutes.abs(): string `0${zoneOffset.minutes.abs()}`)}`;
+            civilString += (zoneOffset.hours >= 0 ? "+" : "-");
+            civilString += string `${zoneOffset.hours.abs() > 9 ? zoneOffset.hours.abs() : string `0${zoneOffset.hours.abs()}`}`;
+            civilString += string `:${(zoneOffset.minutes.abs() > 9 ? zoneOffset.minutes.abs() : string `0${zoneOffset.minutes.abs()}`)}`;
             time:Seconds? seconds = zoneOffset.seconds;
             if seconds !is () {
-                civilString += string `:${(seconds.abs() > 9d? seconds: string `0${seconds.abs()}`)}`;
+                civilString += string `:${(seconds.abs() > 9d ? seconds : string `0${seconds.abs()}`)}`;
             } else {
                 civilString += string `:00`;
             }
 
-        } if civil.timeAbbrev !is () {
+        }
+        if civil.timeAbbrev !is () {
             civilString += string `(${<string>civil.timeAbbrev})`;
         }
         return civilString;
@@ -474,7 +475,7 @@ public isolated client class GoogleSheetsClient {
         string? timeAbbrev = ();
         regexp:Span? find = re `\(.*\)`.find(civilString.trim(), 0);
         if find !is () {
-            timeAbbrev = civilString.trim().substring(find.startIndex+1, find.endIndex-1);
+            timeAbbrev = civilString.trim().substring(find.startIndex + 1, find.endIndex - 1);
         }
         string[] civilArray = re `T`.split(re `\(.*\)`.replace(civilString.trim(), ""));
         civilDateString = civilArray[0];
@@ -542,11 +543,11 @@ public isolated client class GoogleSheetsClient {
         }
     }
 
-    private isolated function sendRequest(http:Client httpClient, string path) returns json | error {
+    private isolated function sendRequest(http:Client httpClient, string path) returns json|error {
         http:Response|error httpResponse = httpClient->get(path);
         if httpResponse is http:Response {
             int statusCode = httpResponse.statusCode;
-            json | error jsonResponse = httpResponse.getJsonPayload();
+            json|error jsonResponse = httpResponse.getJsonPayload();
             if jsonResponse is json {
                 error? validateStatusCodeRes = self.validateStatusCode(jsonResponse, statusCode);
                 if (validateStatusCodeRes is error) {
@@ -565,7 +566,7 @@ public isolated client class GoogleSheetsClient {
         if statusCode != http:STATUS_OK {
             return self.getSpreadsheetError(response);
         }
-    }   
+    }
     isolated function getSpreadsheetError(json|error errorResponse) returns error {
         if errorResponse is json {
             return error(errorResponse.toString());
