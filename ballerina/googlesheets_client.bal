@@ -83,7 +83,7 @@ public isolated client class GoogleSheetsClient {
             sheets:DeveloperMetadataLookupFilter filter = {locationType: "ROW", metadataKey: self.tableName, metadataValue: metadataValue};
             sheets:ValueRange[]|error output = self.googleSheetClient->getRowByDataFilter(self.spreadsheetId, self.sheetId, filter);
             if output is error {
-                return <persist:Error>error(output.message());
+                return error persist:Error(output.message());
             }
             if output.length() > 0 {
                 return persist:getAlreadyExistsError(self.entityName, self.generateKeyRecord(self.keyFields, rowValues));
@@ -94,17 +94,17 @@ public isolated client class GoogleSheetsClient {
                 if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
                     SheetTimeType|error timeValue = rowValues.get(key).ensureType();
                     if timeValue is error {
-                        return <persist:Error>error(timeValue.message());
+                        return error persist:Error(timeValue.message());
                     }
                     string|error value = self.timeToString(timeValue);
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 } else {
                     SheetBasicType|error value = rowValues.get(key).ensureType();
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 }
@@ -113,11 +113,11 @@ public isolated client class GoogleSheetsClient {
             sheets:A1Range a1Range = {sheetName: self.tableName, startIndex: splitedRange[0], endIndex: splitedRange[1]};
             sheets:ValueRange|error insertedRow = self.googleSheetClient->appendValue(self.spreadsheetId, values, a1Range, "USER_ENTERED");
             if insertedRow is error {
-                return <persist:Error>error(insertedRow.message());
+                return error persist:Error(insertedRow.message());
             }
             error? response = self.googleSheetClient->setRowMetaData(self.spreadsheetId, self.sheetId, insertedRow.rowPosition, "DOCUMENT", self.tableName, metadataValue);
             if response is error {
-                return <persist:Error>error(response.message());
+                return error persist:Error(response.message());
             }
         }
     }
@@ -140,7 +140,7 @@ public isolated client class GoogleSheetsClient {
         do {
             return check 'object.cloneWithType(rowType);
         } on fail error e {
-            return <persist:Error>e;
+            return error persist:Error(e.message());
         }
     }
 
@@ -176,7 +176,7 @@ public isolated client class GoogleSheetsClient {
             values = self.convertToArray(response);
         }
         if values.length() == 0 {
-            return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Spreadsheet is empty.");
+            return error persist:Error("Error: the spreadsheet is not initialised correctly. Spreadsheet is empty.");
         } else if values.length() == 1 {
             return rowTable.toStream();
         }
@@ -197,7 +197,7 @@ public isolated client class GoogleSheetsClient {
                 if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
                     SheetFieldType|error typedValue = self.dataConverter(value, dataType);
                     if typedValue is error {
-                        return <persist:Error>error(typedValue.message());
+                        return error persist:Error(typedValue.message());
                     } else if typedValue is time:Civil {
                         rowArray[columnName] = <time:Civil>typedValue;
                     } else if typedValue is time:Date {
@@ -241,20 +241,20 @@ public isolated client class GoogleSheetsClient {
         sheets:DeveloperMetadataLookupFilter filter = {locationType: "ROW", metadataKey: self.tableName, metadataValue: metadataValue};
         sheets:ValueRange[]|error rows = self.googleSheetClient->getRowByDataFilter(self.spreadsheetId, self.sheetId, filter);
         if rows is error {
-            return <persist:Error>error(rows.message());
+            return error persist:Error(rows.message());
         }
 
         if rows.length() == 0 {
             return persist:getNotFoundError(self.entityName, key);
         } else if rows.length() > 1 {
-            return <persist:Error>error(string `Multiple elements found for given key: ${key.toString()}`);
+            return error persist:Error(string `Multiple elements found for given key: ${key.toString()}`);
         }
         foreach string entityKey in entityKeys {
             if !updateRecord.hasKey(entityKey) && self.keyFields.indexOf(entityKey) != () {
                 if key is map<anydata> {
                     (int|string|decimal)|error value = key.get(entityKey).ensureType();
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 } else if (key is int|string|decimal|float) {
@@ -266,7 +266,7 @@ public isolated client class GoogleSheetsClient {
                 if dataType == "boolean" || dataType == "int" || dataType == "float" || dataType == "decimal" {
                     SheetNumericType|error value = self.valuesFromString(rows[0].values[indexOfKey].toString(), dataType);
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 } else {
@@ -279,18 +279,18 @@ public isolated client class GoogleSheetsClient {
                 if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
                     SheetTimeType|error timeValue = updateRecord.get(entityKey).ensureType();
                     if timeValue is error {
-                        return <persist:Error>error(timeValue.message());
+                        return error persist:Error(timeValue.message());
                     }
 
                     value = self.timeToString(timeValue);
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 } else {
                     value = updateRecord.get(entityKey).ensureType();
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 }
@@ -298,7 +298,7 @@ public isolated client class GoogleSheetsClient {
         }
         error? response = self.googleSheetClient->updateRowByDataFilter(self.spreadsheetId, self.sheetId, filter, values, "USER_ENTERED");
         if response is error {
-            return <persist:Error>error(response.message());
+            return error persist:Error(response.message());
 
         }
     }
@@ -318,17 +318,17 @@ public isolated client class GoogleSheetsClient {
         sheets:ValueRange[]|error rows = self.googleSheetClient->getRowByDataFilter(self.spreadsheetId, self.sheetId, filter);
         if rows is error {
             if (deleteKey is map<anydata>) {
-                return <persist:Error>error(string `Not found: ${self.generateKeyArrayString(self.keyFields, deleteKey)}`);
+                return error persist:Error(string `Not found: ${self.generateKeyArrayString(self.keyFields, deleteKey)}`);
             } else {
-                return <persist:Error>error(string `Not found: ${deleteKey.toString()}`);
+                return error persist:Error(string `Not found: ${deleteKey.toString()}`);
             }
         }
         if rows.length() == 0 {
-            return <persist:Error>error("no element found for delete");
+            return error persist:Error("no element found for delete");
         }
         error? response = self.googleSheetClient->deleteRowByDataFilter(self.spreadsheetId, self.sheetId, filter);
         if response is error {
-            return <persist:Error>error(response.message());
+            return error persist:Error(response.message());
         }
     }
 
@@ -348,7 +348,7 @@ public isolated client class GoogleSheetsClient {
             isolated function (record {}, string[]) returns record {}[]|error associationsMethod = self.associationsMethods.get(entity);
             record {}[]|error relations = associationsMethod('object, relationFields);
             if relations is error {
-                return <persist:Error>error("unsupported data format");
+                return error persist:Error("unsupported data format");
             }
             'object[entity] = relations;
         }
@@ -438,7 +438,7 @@ public isolated client class GoogleSheetsClient {
             return string `${timeValue.hour}-${timeValue.minute}-${(timeValue.second).toString()}`;
         }
 
-        return <persist:Error>error("Error: unsupported time format");
+        return error persist:Error("Error: unsupported time format");
 
     }
 
