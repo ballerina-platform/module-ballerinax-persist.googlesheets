@@ -28,7 +28,6 @@ public isolated client class GoogleSheetsRainierClientAllDataType {
 
     private final http:Client httpSheetsClient;
     private final http:Client httpAppScriptClient;
-
     private final map<GoogleSheetsClient> persistClients;
 
     public isolated function init() returns persist:Error? {
