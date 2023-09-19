@@ -37,6 +37,7 @@ public isolated client class GoogleSheetsClient {
 
     private final sheets:Client googleSheetClient;
     private final http:Client httpSheetsClient;
+    private final http:Client httpAppScriptClient;
     private final string spreadsheetId;
     private final int sheetId;
     private final string entityName;
@@ -57,7 +58,7 @@ public isolated client class GoogleSheetsClient {
     # + spreadsheetId - Id of the spreadsheet
     # + sheetId - Id of the sheet
     # + return - A `persist:persist:Error` if the client creation fails
-    public isolated function init(sheets:Client googleSheetClient, http:Client httpSheetsClient, SheetMetadata & readonly sheetMetadata, string & readonly spreadsheetId, int & readonly sheetId) returns persist:Error? {
+    public isolated function init(sheets:Client googleSheetClient, http:Client httpSheetsClient, http:Client httpAppScriptClient, SheetMetadata & readonly sheetMetadata, string & readonly spreadsheetId, int & readonly sheetId) returns persist:Error? {
         self.entityName = sheetMetadata.entityName;
         self.spreadsheetId = spreadsheetId;
         self.tableName = sheetMetadata.tableName;
@@ -66,6 +67,7 @@ public isolated client class GoogleSheetsClient {
         self.httpSheetsClient = httpSheetsClient;
         self.keyFields = sheetMetadata.keyFields;
         self.googleSheetClient = googleSheetClient;
+        self.httpAppScriptClient = httpAppScriptClient;
         self.dataTypes = sheetMetadata.dataTypes;
         self.query = sheetMetadata.query;
         self.queryOne = sheetMetadata.queryOne;
@@ -81,14 +83,6 @@ public isolated client class GoogleSheetsClient {
         string[] fieldMetadataKeys = self.fieldMetadata.keys();
         foreach record {} rowValues in insertRecords {
             string metadataValue = self.generateMetadataValue(self.keyFields, rowValues);
-            sheets:DeveloperMetadataLookupFilter filter = {locationType: "ROW", metadataKey: self.tableName, metadataValue: metadataValue};
-            sheets:ValueRange[]|error output = self.googleSheetClient->getRowByDataFilter(self.spreadsheetId, self.sheetId, filter);
-            if output is error {
-                return <persist:Error>error(output.message());
-            }
-            if output.length() > 0 {
-                return persist:getAlreadyExistsError(self.entityName, self.generateKeyRecord(self.keyFields, rowValues));
-            }
             SheetBasicType[] values = [];
             foreach string key in fieldMetadataKeys {
                 string dataType = self.dataTypes.get(key).toString();
@@ -110,15 +104,39 @@ public isolated client class GoogleSheetsClient {
                     values.push(value);
                 }
             }
-            string[] splitedRange = re `:`.split(self.range);
-            sheets:A1Range a1Range = {sheetName: self.tableName, startIndex: splitedRange[0], endIndex: splitedRange[1]};
-            sheets:ValueRange|error insertedRow = self.googleSheetClient->appendValue(self.spreadsheetId, values, a1Range, "USER_ENTERED");
-            if insertedRow is error {
-                return <persist:Error>error(insertedRow.message());
-            }
-            error? response = self.googleSheetClient->setRowMetaData(self.spreadsheetId, self.sheetId, insertedRow.rowPosition, "DOCUMENT", self.tableName, metadataValue);
+            string a1Range = string `${self.tableName}!${self.range}`;
+            http:Response|error response = self.httpAppScriptClient->/.post({
+                "function": "insertRecord",
+                "parameters": [
+                    self.tableName,
+                    metadataValue,
+                    values,
+                    self.spreadsheetId,
+                    a1Range,
+                    self.sheetId
+                ]
+            });
             if response is error {
                 return <persist:Error>error(response.message());
+            }
+            json|error responseJson = response.getJsonPayload();
+            if responseJson is error {
+                return <persist:Error>error(responseJson.message());
+            }
+            AppScriptJsonResponseRecord|error responseJsonRecord = responseJson.cloneWithType();
+            if responseJsonRecord is error {
+                return <persist:Error>error(responseJsonRecord.message());
+            }
+            if responseJsonRecord.done == false {
+                return <persist:Error>error("Error: Connection to the AppScript API failed. ");
+            }
+            ErrorRecord? errorRecord = responseJsonRecord.'error;
+            if errorRecord !is () {
+                if errorRecord.details[0].errorMessage.includes("Duplicate Record", 0) {
+                    return <persist:AlreadyExistsError>error(string `Duplicate key: ${self.generateKeyArrayString(self.keyFields, rowValues)}`);
+                } else {
+                    return <persist:Error>error(string `Error: ${errorRecord.details[0].errorMessage} on ${self.generateKeyArrayString(self.keyFields, rowValues)}`);
+                }
             }
         }
     }
@@ -171,18 +189,18 @@ public isolated client class GoogleSheetsClient {
         json|error response = self.sendRequest(self.httpSheetsClient, getSheetValuesPath);
         if response is error {
             return <persist:Error>response;
-        } 
+        }
         if response.values !is error {
             values = self.convertToArray(response);
         }
         if values.length() == 0 {
-            return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Spreadsheet is empty.");
+            return <persist:Error>error("Error: the spreadsheet is not initialised correctly.");
         } else if values.length() == 1 {
             return rowTable.toStream();
         }
         string[] columnNames = values[0];
         if columnNames.length() != self.dataTypes.length() {
-            return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Number of columns in the sheet does not match with the entity. ");
+            return <persist:Error>error("Error: the spreadsheet is not initialised correctly.");
         }
         foreach string[] rowValue in values.slice(1) {
             record {} rowArray = {};
@@ -443,25 +461,26 @@ public isolated client class GoogleSheetsClient {
     }
 
     private isolated function civilToString(time:Civil civil) returns string|error {
-        string civilString = string `${civil.year}-${(civil.month.abs() > 9? civil.month: string `0${civil.month}`)}-${(civil.day.abs() > 9? civil.day: string `0${civil.day}`)}`;
-        civilString += string `T${(civil.hour.abs() > 9? civil.hour: string `0${civil.hour}`)}:${(civil.minute.abs() > 9? civil.minute: string `0${civil.minute}`)}`;
+        string civilString = string `${civil.year}-${(civil.month.abs() > 9 ? civil.month : string `0${civil.month}`)}-${(civil.day.abs() > 9 ? civil.day : string `0${civil.day}`)}`;
+        civilString += string `T${(civil.hour.abs() > 9 ? civil.hour : string `0${civil.hour}`)}:${(civil.minute.abs() > 9 ? civil.minute : string `0${civil.minute}`)}`;
         if civil.second !is () {
             time:Seconds seconds = <time:Seconds>civil.second;
-            civilString += string `:${(seconds.abs() > (check decimal:fromString("9"))? seconds: string `0${seconds}`)}`;
+            civilString += string `:${(seconds.abs() > (check decimal:fromString("9")) ? seconds : string `0${seconds}`)}`;
         }
         if civil.utcOffset !is () {
             time:ZoneOffset zoneOffset = <time:ZoneOffset>civil.utcOffset;
-            civilString += (zoneOffset.hours >= 0? "+" : "-");
-            civilString += string `${zoneOffset.hours.abs() > 9? zoneOffset.hours.abs() : string `0${zoneOffset.hours.abs()}`}`;
-            civilString += string `:${(zoneOffset.minutes.abs() > 9? zoneOffset.minutes.abs(): string `0${zoneOffset.minutes.abs()}`)}`;
+            civilString += (zoneOffset.hours >= 0 ? "+" : "-");
+            civilString += string `${zoneOffset.hours.abs() > 9 ? zoneOffset.hours.abs() : string `0${zoneOffset.hours.abs()}`}`;
+            civilString += string `:${(zoneOffset.minutes.abs() > 9 ? zoneOffset.minutes.abs() : string `0${zoneOffset.minutes.abs()}`)}`;
             time:Seconds? seconds = zoneOffset.seconds;
             if seconds !is () {
-                civilString += string `:${(seconds.abs() > 9d? seconds: string `0${seconds.abs()}`)}`;
+                civilString += string `:${(seconds.abs() > 9d ? seconds : string `0${seconds.abs()}`)}`;
             } else {
                 civilString += string `:00`;
             }
 
-        } if civil.timeAbbrev !is () {
+        }
+        if civil.timeAbbrev !is () {
             civilString += string `(${<string>civil.timeAbbrev})`;
         }
         return civilString;
@@ -474,7 +493,7 @@ public isolated client class GoogleSheetsClient {
         string? timeAbbrev = ();
         regexp:Span? find = re `\(.*\)`.find(civilString.trim(), 0);
         if find !is () {
-            timeAbbrev = civilString.trim().substring(find.startIndex+1, find.endIndex-1);
+            timeAbbrev = civilString.trim().substring(find.startIndex + 1, find.endIndex - 1);
         }
         string[] civilArray = re `T`.split(re `\(.*\)`.replace(civilString.trim(), ""));
         civilDateString = civilArray[0];
@@ -542,11 +561,11 @@ public isolated client class GoogleSheetsClient {
         }
     }
 
-    private isolated function sendRequest(http:Client httpClient, string path) returns json | error {
+    private isolated function sendRequest(http:Client httpClient, string path) returns json|error {
         http:Response|error httpResponse = httpClient->get(path);
         if httpResponse is http:Response {
             int statusCode = httpResponse.statusCode;
-            json | error jsonResponse = httpResponse.getJsonPayload();
+            json|error jsonResponse = httpResponse.getJsonPayload();
             if jsonResponse is json {
                 error? validateStatusCodeRes = self.validateStatusCode(jsonResponse, statusCode);
                 if (validateStatusCodeRes is error) {
@@ -565,7 +584,7 @@ public isolated client class GoogleSheetsClient {
         if statusCode != http:STATUS_OK {
             return self.getSpreadsheetError(response);
         }
-    }   
+    }
     isolated function getSpreadsheetError(json|error errorResponse) returns error {
         if errorResponse is json {
             return error(errorResponse.toString());

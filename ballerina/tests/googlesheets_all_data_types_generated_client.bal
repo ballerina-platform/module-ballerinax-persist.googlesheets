@@ -27,7 +27,7 @@ public isolated client class GoogleSheetsRainierClientAllDataType {
     private final sheets:Client googleSheetClient;
 
     private final http:Client httpSheetsClient;
-
+    private final http:Client httpAppScriptClient;
     private final map<GoogleSheetsClient> persistClients;
 
     public isolated function init() returns persist:Error? {
@@ -88,14 +88,19 @@ public isolated client class GoogleSheetsRainierClientAllDataType {
         if httpSheetsClient is error {
             return <persist:Error>error(httpSheetsClient.message());
         }
+        http:Client|error httpAppScriptClient = new (string `https://script.googleapis.com/v1/scripts/${scriptId}:run`, httpClientConfiguration);
+        if httpAppScriptClient is error {
+            return <persist:Error>error(httpAppScriptClient.message());
+        }
         sheets:Client|error googleSheetClient = new (sheetsClientConfig);
         if googleSheetClient is error {
             return <persist:Error>error(googleSheetClient.message());
         }
         self.googleSheetClient = googleSheetClient;
         self.httpSheetsClient = httpSheetsClient;
+        self.httpAppScriptClient = httpAppScriptClient;
         map<int> sheetIds = check getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
-        self.persistClients = {[ORDER_ITEM_EXTENDED] : check new (self.googleSheetClient, self.httpSheetsClient, metadata.get(ORDER_ITEM_EXTENDED).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM_EXTENDED).cloneReadOnly())};
+        self.persistClients = {[ORDER_ITEM_EXTENDED] : check new (self.googleSheetClient, self.httpSheetsClient, self.httpAppScriptClient, metadata.get(ORDER_ITEM_EXTENDED).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM_EXTENDED).cloneReadOnly())};
     }
 
     isolated resource function get orderitemextendeds(OrderItemExtendedTargetType targetType = <>) returns stream<targetType, persist:Error?> = @java:Method {

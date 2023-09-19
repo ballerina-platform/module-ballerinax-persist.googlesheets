@@ -31,6 +31,7 @@ public isolated client class GoogleSheetsRainierClient {
     private final sheets:Client googleSheetClient;
 
     private final http:Client httpSheetsClient;
+    private final http:Client httpAppScriptClient;
 
     private final map<GoogleSheetsClient> persistClients;
 
@@ -168,19 +169,25 @@ public isolated client class GoogleSheetsRainierClient {
         if httpSheetsClient is error {
             return <persist:Error>error(httpSheetsClient.message());
         }
+
+        http:Client|error httpAppScriptClient = new (string `https://script.googleapis.com/v1/scripts/${scriptId}:run`, httpClientConfiguration);
+        if httpAppScriptClient is error {
+            return <persist:Error>error(httpAppScriptClient.message());
+        }
         sheets:Client|error googleSheetClient = new (sheetsClientConfig);
         if googleSheetClient is error {
             return <persist:Error>error(googleSheetClient.message());
         }
         self.googleSheetClient = googleSheetClient;
         self.httpSheetsClient = httpSheetsClient;
+        self.httpAppScriptClient = httpAppScriptClient;
         map<int> sheetIds = check getSheetIds(self.googleSheetClient, metadata, spreadsheetId);
         self.persistClients = {
-            [EMPLOYEE] : check new (self.googleSheetClient, self.httpSheetsClient, metadata.get(EMPLOYEE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(EMPLOYEE).cloneReadOnly()),
-            [WORKSPACE] : check new (self.googleSheetClient, self.httpSheetsClient, metadata.get(WORKSPACE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(WORKSPACE).cloneReadOnly()),
-            [BUILDING] : check new (self.googleSheetClient, self.httpSheetsClient, metadata.get(BUILDING).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(BUILDING).cloneReadOnly()),
-            [DEPARTMENT] : check new (self.googleSheetClient, self.httpSheetsClient, metadata.get(DEPARTMENT).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(DEPARTMENT).cloneReadOnly()),
-            [ORDER_ITEM] : check new (self.googleSheetClient, self.httpSheetsClient, metadata.get(ORDER_ITEM).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM).cloneReadOnly())
+            [EMPLOYEE] : check new (self.googleSheetClient, self.httpSheetsClient, self.httpAppScriptClient, metadata.get(EMPLOYEE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(EMPLOYEE).cloneReadOnly()),
+            [WORKSPACE] : check new (self.googleSheetClient, self.httpSheetsClient, self.httpAppScriptClient, metadata.get(WORKSPACE).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(WORKSPACE).cloneReadOnly()),
+            [BUILDING] : check new (self.googleSheetClient, self.httpSheetsClient, self.httpAppScriptClient, metadata.get(BUILDING).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(BUILDING).cloneReadOnly()),
+            [DEPARTMENT] : check new (self.googleSheetClient, self.httpSheetsClient, self.httpAppScriptClient, metadata.get(DEPARTMENT).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(DEPARTMENT).cloneReadOnly()),
+            [ORDER_ITEM] : check new (self.googleSheetClient, self.httpSheetsClient, self.httpAppScriptClient, metadata.get(ORDER_ITEM).cloneReadOnly(), spreadsheetId.cloneReadOnly(), sheetIds.get(ORDER_ITEM).cloneReadOnly())
         };
     }
 
