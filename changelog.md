@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+
+## [1.2.0] - 2023-09-18
+
+### Changed
+- [Updated error message in cases of uninitialized spreadsheets](https://github.com/ballerina-platform/ballerina-standard-library/issues/4505)
+
+## [1.1.0] - 2023-06-30
+
+### Changed
 - [Updated error message in cases of uninitialized spreadsheets](https://github.com/ballerina-platform/ballerina-standard-library/issues/4505)
 - [Update code to preserve local time when converting civil time to string](https://github.com/ballerina-platform/ballerina-standard-library/issues/4575)
 - [Updated error messages to be consistent across all data sources](https://github.com/ballerina-platform/ballerina-standard-library/issues/4360)
