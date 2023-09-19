@@ -41,12 +41,15 @@ public type AppScriptJsonResponseRecord record {
     json response?;
     ErrorRecord 'error?;
 };
+
+#Record types to store errors in Appscript response
 public type ErrorRecord record {
     string message;
     int code;
     ErrorDetails[] details;
 };
 
+#Record types to store details
 public type ErrorDetails record {
     string errorType;
     string errorMessage;
