@@ -132,14 +132,14 @@ task pullGoogleSheetsDependency(type: Exec) {
     if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
         try {
             String distributionBinPath = project.projectDir.absolutePath + "/build/jballerina-tools-${project.extensions.ballerina.langVersion}/bin"
-            commandLine 'sh', '-c', "$distributionBinPath/bal pull ballerinax/googleapis.sheets"
+            commandLine 'sh', '-c', "${distributionBinPath}/bal pull ballerinax/googleapis.sheets:${googleSheetsConnector}"
         } catch (all) {
             return 1
         }
     } else {
         try {
             String distributionBinPath = project.projectDir.absolutePath + "/build/jballerina-tools-${project.extensions.ballerina.langVersion}/bin"
-            commandLine 'cmd', '/c', "$distributionBinPath/bal.bat pull ballerinax/googleapis.sheets"
+            commandLine 'cmd', '/c', "${distributionBinPath}/bal.bat pull ballerinax/googleapis.sheets:${googleSheetsConnector}"
         } catch (all) {
             return 1
         }
