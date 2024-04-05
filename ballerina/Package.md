@@ -1,12 +1,40 @@
-## Package overview
+# Overview
 
 This package provides Google sheets support for the `bal persist` feature, which provides functionality to store and query data from a Google sheets conveniently through a data model.
 
-The Google Sheets data store is a cloud-based spreadsheet application that stores data in tables. The Google Sheets data store is useful for storing data in a spreadsheet format. The Google Sheets data store is not the default data store for the `bal persist` feature. Therefore, you need to explicitly specify the data store when initializing Ballerina Persistence in your application. like below,
+The Google Sheets data store is a cloud-based spreadsheet application that stores data in tables. The Google Sheets data store is useful for storing data in a spreadsheet format.
 
-```
-$ bal persist init --datastore googlesheets
-```
+## How to use with `bal persist`
+
+By default, `bal persist` utilizes the in-memory data store. Therefore, you must explicitly specify Google Sheets data store as follows:
+
+### Integrate to `bal build`
+
+1. Initialize `bal persist` and integrate to `bal build` using the following command,
+
+    ```
+    $ bal persist add --datastore googlesheets --module <module_name>
+    ```
+
+2. After defining the entities, build the application using the following command,
+
+    ```
+    $ bal build
+    ```
+
+### One time generation
+
+1. Initialize `bal persist` using the following command,
+
+    ```
+    $ bal persist init
+    ```
+
+2. Generate the persist client using the following command,
+
+    ```
+    $ bal persist generate --datastore googlesheets --module <module_name>
+   ```
 
 ## Supported Ballerina Types
 The following table lists the Ballerina types supported by the Google Sheets data store and the corresponding Google Sheets types used to store the data in the spreadsheet.
