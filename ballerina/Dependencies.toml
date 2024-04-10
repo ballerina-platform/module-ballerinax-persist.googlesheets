@@ -274,15 +274,6 @@ modules = [
 
 [[package]]
 org = "ballerina"
-name = "regex"
-version = "1.4.3"
-dependencies = [
-	{org = "ballerina", name = "jballerina.java"},
-	{org = "ballerina", name = "lang.string"}
-]
-
-[[package]]
-org = "ballerina"
 name = "task"
 version = "2.5.0"
 dependencies = [
@@ -326,6 +317,15 @@ modules = [
 ]
 
 [[package]]
+org = "ballerinai"
+name = "observe"
+version = "0.0.0"
+dependencies = [
+	{org = "ballerina", name = "jballerina.java"},
+	{org = "ballerina", name = "observe"}
+]
+
+[[package]]
 org = "ballerinax"
 name = "client.config"
 version = "1.0.1"
@@ -337,7 +337,7 @@ dependencies = [
 [[package]]
 org = "ballerinax"
 name = "googleapis.sheets"
-version = "3.4.0"
+version = "3.5.0"
 dependencies = [
 	{org = "ballerina", name = "http"},
 	{org = "ballerina", name = "jballerina.java"},
@@ -346,7 +346,7 @@ dependencies = [
 	{org = "ballerina", name = "lang.regexp"},
 	{org = "ballerina", name = "log"},
 	{org = "ballerina", name = "os"},
-	{org = "ballerina", name = "regex"},
+	{org = "ballerinai", name = "observe"},
 	{org = "ballerinax", name = "client.config"}
 ]
 modules = [
