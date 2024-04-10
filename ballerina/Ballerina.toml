@@ -1,7 +1,7 @@
 [package]
 org = "ballerinax"
 name = "persist.googlesheets"
-version = "1.2.0"
+version = "1.3.0"
 authors = ["Ballerina"]
 keywords = ["persist", "googlesheets", "experimental"]
 repository = "https://github.com/ballerina-platform/module-ballerina-persist"
@@ -15,11 +15,11 @@ graalvmCompatible = true
 [[platform.java17.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist.googlesheets-native"
-version = "1.2.0"
-path = "../native/build/libs/persist.googlesheets-native-1.2.0-SNAPSHOT.jar"
+version = "1.3.0"
+path = "../native/build/libs/persist.googlesheets-native-1.3.0-SNAPSHOT.jar"
 
 [[platform.java17.dependency]]
 groupId = "io.ballerina.stdlib"
 artifactId = "persist-native"
-version = "1.2.0"
-path = "./lib/persist-native-1.2.0.jar"
+version = "1.3.0"
+path = "./lib/persist-native-1.3.0-20240409-100100-594c874.jar"
