@@ -15,7 +15,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: 17
+          java-version: 17.0.7
       - name: Build with Gradle
         env:
           packageUser: ${{ github.actor }}
@@ -31,3 +31,4 @@ jobs:
           format: 'table'
           timeout: '10m0s'
           exit-code: '1'
+          

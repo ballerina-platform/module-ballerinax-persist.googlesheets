@@ -24,7 +24,7 @@ import ballerina/lang.runtime;
     enable: true
 }
 function gsheetsEmployeeRelationsTest() returns error? {
-    runtime:sleep(15);
+    runtime:sleep(40);
     Employee employee21 = {
         empNo: "employee-21",
         firstName: "Tom",

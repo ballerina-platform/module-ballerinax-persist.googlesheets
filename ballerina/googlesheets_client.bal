@@ -13,12 +13,11 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
-import ballerina/persist;
-import ballerina/url;
 import ballerina/http;
-import ballerina/time;
 import ballerina/lang.regexp;
+import ballerina/persist;
+import ballerina/time;
+import ballerina/url;
 import ballerinax/googleapis.sheets;
 
 type Table record {
@@ -36,7 +35,7 @@ type RowValues record {
 public isolated client class GoogleSheetsClient {
 
     private final sheets:Client googleSheetClient;
-    private final http:Client httpClient;
+    private final http:Client httpSheetsClient;
     private final string spreadsheetId;
     private final int sheetId;
     private final string entityName;
@@ -52,18 +51,18 @@ public isolated client class GoogleSheetsClient {
     # Initializes the `GSheetClient`.
     #
     # + googleSheetClient - The `sheets:Client`, which is used to execute google sheets operations
-    # + httpClient - The `http:Client`, which is used to execute http requests
+    # + httpSheetsClient - The `http:Client`, which is used to execute http requests
     # + sheetMetadata - Metadata of the entity
     # + spreadsheetId - Id of the spreadsheet
     # + sheetId - Id of the sheet
     # + return - A `persist:persist:Error` if the client creation fails
-    public isolated function init(sheets:Client googleSheetClient, http:Client httpClient, SheetMetadata & readonly sheetMetadata, string & readonly spreadsheetId, int & readonly sheetId) returns persist:Error? {
+    public isolated function init(sheets:Client googleSheetClient, http:Client httpSheetsClient, SheetMetadata & readonly sheetMetadata, string & readonly spreadsheetId, int & readonly sheetId) returns persist:Error? {
         self.entityName = sheetMetadata.entityName;
         self.spreadsheetId = spreadsheetId;
         self.tableName = sheetMetadata.tableName;
         self.fieldMetadata = sheetMetadata.fieldMetadata;
         self.range = sheetMetadata.range;
-        self.httpClient = httpClient;
+        self.httpSheetsClient = httpSheetsClient;
         self.keyFields = sheetMetadata.keyFields;
         self.googleSheetClient = googleSheetClient;
         self.dataTypes = sheetMetadata.dataTypes;
@@ -84,7 +83,7 @@ public isolated client class GoogleSheetsClient {
             sheets:DeveloperMetadataLookupFilter filter = {locationType: "ROW", metadataKey: self.tableName, metadataValue: metadataValue};
             sheets:ValueRange[]|error output = self.googleSheetClient->getRowByDataFilter(self.spreadsheetId, self.sheetId, filter);
             if output is error {
-                return <persist:Error>error(output.message());
+                return error persist:Error(output.message());
             }
             if output.length() > 0 {
                 return persist:getAlreadyExistsError(self.entityName, self.generateKeyRecord(self.keyFields, rowValues));
@@ -95,17 +94,17 @@ public isolated client class GoogleSheetsClient {
                 if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
                     SheetTimeType|error timeValue = rowValues.get(key).ensureType();
                     if timeValue is error {
-                        return <persist:Error>error(timeValue.message());
+                        return error persist:Error(timeValue.message());
                     }
                     string|error value = self.timeToString(timeValue);
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 } else {
                     SheetBasicType|error value = rowValues.get(key).ensureType();
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 }
@@ -114,11 +113,11 @@ public isolated client class GoogleSheetsClient {
             sheets:A1Range a1Range = {sheetName: self.tableName, startIndex: splitedRange[0], endIndex: splitedRange[1]};
             sheets:ValueRange|error insertedRow = self.googleSheetClient->appendValue(self.spreadsheetId, values, a1Range, "USER_ENTERED");
             if insertedRow is error {
-                return <persist:Error>error(insertedRow.message());
+                return error persist:Error(insertedRow.message());
             }
             error? response = self.googleSheetClient->setRowMetaData(self.spreadsheetId, self.sheetId, insertedRow.rowPosition, "DOCUMENT", self.tableName, metadataValue);
             if response is error {
-                return <persist:Error>error(response.message());
+                return error persist:Error(response.message());
             }
         }
     }
@@ -141,7 +140,7 @@ public isolated client class GoogleSheetsClient {
         do {
             return check 'object.cloneWithType(rowType);
         } on fail error e {
-            return <persist:Error>e;
+            return error persist:Error(e.message());
         }
     }
 
@@ -160,69 +159,67 @@ public isolated client class GoogleSheetsClient {
     # + fields - The fields to be retrieved
     # + include - The associations to be retrieved
     # + return - A stream of records in the `rowType` type or a `persist:Error` if the operation fails
-    public isolated function readTableAsStream(typedesc<record {}> rowType, map<anydata> typeMap, string[] fields = [], string[] include = []) returns stream<record {}, persist:Error?>|persist:Error {
-        string query = "select *";
-        string|error encodedQuery = url:encode(query, "UTF-8");
-        if encodedQuery is error {
-            return <persist:Error>error(encodedQuery.message());
+    public isolated function readTableAsStream(typedesc<record {}> rowType, map<anydata> typeMap, string[] fields = [], string[] include = []) returns stream<record {|anydata...;|}, persist:Error?>|error {
+        string[][] values = [];
+        record {}[] rowTable = [];
+        string|error encodedRange = url:encode(self.range, "UTF-8");
+        if encodedRange is error {
+            return error persist:Error(encodedRange.message());
         }
-        http:QueryParams queries = {"gid": self.sheetId, "range": self.range, "tq": <string>encodedQuery, "tqx": "out:csv"};
-        http:Response|error response = self.httpClient->/d/[self.spreadsheetId]/gviz/tq(params = queries);
+        string getSheetValuesPath = string `/${self.tableName}!${encodedRange}?dateTimeRenderOption=FORMATTED_STRING&majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE`;
+        json|error response = self.sendRequest(self.httpSheetsClient, getSheetValuesPath);
+
         if response is error {
-            return <persist:Error>error(response.message());
+            return error persist:Error(response.message());
         }
-        string|error textResponse = response.getTextPayload();
-        if textResponse !is error {
-            string[] responseRows = re `\n`.split(textResponse);
-            record {}[] rowTable = [];
-            if responseRows.length() == 0 {
-                return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Spreadsheet is empty.");
-            } else if responseRows.length() == 1 {
-                return rowTable.toStream();
-            }
-            string[] columnNames = re `,`.split(responseRows[0]);
-            foreach string rowString in responseRows.slice(1) {
-                int i = 0;
-                record {} rowArray = {};
-                string[] rowValues = re `,`.split(rowString);
-                if columnNames.length() != self.dataTypes.length() {
-                    return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Number of columns in the sheet does not match with the entity. ");
-                }
-                foreach string rowValue in rowValues {
-                    string columnName = re ` `.replaceAll(re `"`.replaceAll(columnNames[i], ""), "");
-                    string value = re `"`.replaceAll(rowValue, "");
-                    if !self.dataTypes.hasKey(columnName) {
-                        return <persist:Error>error("Error: the spreadsheet is not initialised correctly. Sheets columns do not match with the enitity. ");
-                    }
-                    string dataType = self.dataTypes.get(columnName).toString();
-                    if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
-                        SheetFieldType|error typedValue = self.dataConverter(value, dataType);
-                        if typedValue is error {
-                            return <persist:Error>error(typedValue.message());
-                        } else if typedValue is time:Civil {
-                            rowArray[columnName] = <time:Civil>typedValue;
-                        } else if typedValue is time:Date {
-                            rowArray[columnName] = <time:Date>typedValue;
-                        } else if typedValue is time:TimeOfDay {
-                            rowArray[columnName] = <time:TimeOfDay>typedValue;
-                        } else if typedValue is time:Utc {
-                            rowArray[columnName] = <time:Utc>typedValue;
-                        }
-                    } else {
-                        SheetFieldType|error typedValue = self.dataConverter(value, dataType);
-                        if typedValue is error {
-                            return <persist:Error>error(typedValue.message());
-                        }
-                        rowArray[columnName] = typedValue;
-                    }
-                    i = i + 1;
-                }
-                rowTable.push(rowArray);
-            }
+        if response.values !is error {
+            values = self.convertToArray(response);
+        }
+        if values.length() == 0 {
+            return error persist:Error("Error: the spreadsheet is not initialised correctly. Spreadsheet is empty.");
+        } else if values.length() == 1 {
             return rowTable.toStream();
-        } else {
-            return <persist:Error>error(textResponse.message());
         }
+        string[] columnNames = values[0];
+        if columnNames.length() != self.dataTypes.length() {
+            return error persist:Error("Error: the spreadsheet is not initialised correctly. Number of columns in the sheet does not match with the entity. ");
+        }
+        foreach string[] rowValue in values.slice(1) {
+            record {} rowArray = {};
+            int columnIndex = 0;
+            foreach string columnName in columnNames {
+                string columnNameProcessed = re ` `.replaceAll(re `"`.replaceAll(columnName, ""), "");
+                if !self.dataTypes.hasKey(columnName) {
+                    return error persist:Error(string `Error: the spreadsheet is not initialised correctly. Column ${columnName} is not defined in the data types.`);
+                }
+                string dataType = self.dataTypes.get(columnNameProcessed).toString();
+                string value = re `"`.replaceAll(rowValue[columnIndex], "");
+                if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
+                    SheetFieldType|error typedValue = self.dataConverter(value, dataType);
+                    if typedValue is error {
+                        return error persist:Error(typedValue.message());
+                    } else if typedValue is time:Civil {
+                        rowArray[columnName] = <time:Civil>typedValue;
+                    } else if typedValue is time:Date {
+                        rowArray[columnName] = <time:Date>typedValue;
+                    } else if typedValue is time:TimeOfDay {
+                        rowArray[columnName] = <time:TimeOfDay>typedValue;
+                    } else if typedValue is time:Utc {
+                        rowArray[columnName] = <time:Utc>typedValue;
+                    }
+                } else {
+                    SheetFieldType|error typedValue = self.dataConverter(value, dataType);
+                    if typedValue is error {
+                        return error persist:Error(typedValue.message());
+                    }
+                    rowArray[columnName] = typedValue;
+                }
+                columnIndex += 1;
+
+            }
+            rowTable.push(rowArray);
+        }
+        return rowTable.toStream();
     }
 
     # Performs an SQL `UPDATE` operation to update multiple entity records in the database.
@@ -244,20 +241,20 @@ public isolated client class GoogleSheetsClient {
         sheets:DeveloperMetadataLookupFilter filter = {locationType: "ROW", metadataKey: self.tableName, metadataValue: metadataValue};
         sheets:ValueRange[]|error rows = self.googleSheetClient->getRowByDataFilter(self.spreadsheetId, self.sheetId, filter);
         if rows is error {
-            return <persist:Error>error(rows.message());
+            return error persist:Error(rows.message());
         }
 
         if rows.length() == 0 {
             return persist:getNotFoundError(self.entityName, key);
         } else if rows.length() > 1 {
-            return <persist:Error>error(string `Multiple elements found for given key: ${key.toString()}`);
+            return error persist:Error(string `Multiple elements found for given key: ${key.toString()}`);
         }
         foreach string entityKey in entityKeys {
             if !updateRecord.hasKey(entityKey) && self.keyFields.indexOf(entityKey) != () {
                 if key is map<anydata> {
                     (int|string|decimal)|error value = key.get(entityKey).ensureType();
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 } else if (key is int|string|decimal|float) {
@@ -269,7 +266,7 @@ public isolated client class GoogleSheetsClient {
                 if dataType == "boolean" || dataType == "int" || dataType == "float" || dataType == "decimal" {
                     SheetNumericType|error value = self.valuesFromString(rows[0].values[indexOfKey].toString(), dataType);
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 } else {
@@ -282,18 +279,18 @@ public isolated client class GoogleSheetsClient {
                 if dataType == "time:Date" || dataType == "time:TimeOfDay" || dataType == "time:Civil" || dataType == "time:Utc" {
                     SheetTimeType|error timeValue = updateRecord.get(entityKey).ensureType();
                     if timeValue is error {
-                        return <persist:Error>error(timeValue.message());
+                        return error persist:Error(timeValue.message());
                     }
 
                     value = self.timeToString(timeValue);
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 } else {
                     value = updateRecord.get(entityKey).ensureType();
                     if value is error {
-                        return <persist:Error>error(value.message());
+                        return error persist:Error(value.message());
                     }
                     values.push(value);
                 }
@@ -301,7 +298,7 @@ public isolated client class GoogleSheetsClient {
         }
         error? response = self.googleSheetClient->updateRowByDataFilter(self.spreadsheetId, self.sheetId, filter, values, "USER_ENTERED");
         if response is error {
-            return <persist:Error>error(response.message());
+            return error persist:Error(response.message());
 
         }
     }
@@ -321,17 +318,17 @@ public isolated client class GoogleSheetsClient {
         sheets:ValueRange[]|error rows = self.googleSheetClient->getRowByDataFilter(self.spreadsheetId, self.sheetId, filter);
         if rows is error {
             if (deleteKey is map<anydata>) {
-                return <persist:Error>error(string `Not found: ${self.generateKeyArrayString(self.keyFields, deleteKey)}`);
+                return error persist:Error(string `Not found: ${self.generateKeyArrayString(self.keyFields, deleteKey)}`);
             } else {
-                return <persist:Error>error(string `Not found: ${deleteKey.toString()}`);
+                return error persist:Error(string `Not found: ${deleteKey.toString()}`);
             }
         }
         if rows.length() == 0 {
-            return <persist:Error>error("no element found for delete");
+            return error persist:Error("no element found for delete");
         }
         error? response = self.googleSheetClient->deleteRowByDataFilter(self.spreadsheetId, self.sheetId, filter);
         if response is error {
-            return <persist:Error>error(response.message());
+            return error persist:Error(response.message());
         }
     }
 
@@ -351,7 +348,7 @@ public isolated client class GoogleSheetsClient {
             isolated function (record {}, string[]) returns record {}[]|error associationsMethod = self.associationsMethods.get(entity);
             record {}[]|error relations = associationsMethod('object, relationFields);
             if relations is error {
-                return <persist:Error>error("unsupported data format");
+                return error persist:Error("unsupported data format");
             }
             'object[entity] = relations;
         }
@@ -441,30 +438,31 @@ public isolated client class GoogleSheetsClient {
             return string `${timeValue.hour}-${timeValue.minute}-${(timeValue.second).toString()}`;
         }
 
-        return <persist:Error>error("Error: unsupported time format");
+        return error persist:Error("Error: unsupported time format");
 
     }
 
     private isolated function civilToString(time:Civil civil) returns string|error {
-        string civilString = string `${civil.year}-${(civil.month.abs() > 9? civil.month: string `0${civil.month}`)}-${(civil.day.abs() > 9? civil.day: string `0${civil.day}`)}`;
-        civilString += string `T${(civil.hour.abs() > 9? civil.hour: string `0${civil.hour}`)}:${(civil.minute.abs() > 9? civil.minute: string `0${civil.minute}`)}`;
+        string civilString = string `${civil.year}-${(civil.month.abs() > 9 ? civil.month : string `0${civil.month}`)}-${(civil.day.abs() > 9 ? civil.day : string `0${civil.day}`)}`;
+        civilString += string `T${(civil.hour.abs() > 9 ? civil.hour : string `0${civil.hour}`)}:${(civil.minute.abs() > 9 ? civil.minute : string `0${civil.minute}`)}`;
         if civil.second !is () {
             time:Seconds seconds = <time:Seconds>civil.second;
-            civilString += string `:${(seconds.abs() > (check decimal:fromString("9"))? seconds: string `0${seconds}`)}`;
+            civilString += string `:${(seconds.abs() > (check decimal:fromString("9")) ? seconds : string `0${seconds}`)}`;
         }
         if civil.utcOffset !is () {
             time:ZoneOffset zoneOffset = <time:ZoneOffset>civil.utcOffset;
-            civilString += (zoneOffset.hours >= 0? "+" : "-");
-            civilString += string `${zoneOffset.hours.abs() > 9? zoneOffset.hours.abs() : string `0${zoneOffset.hours.abs()}`}`;
-            civilString += string `:${(zoneOffset.minutes.abs() > 9? zoneOffset.minutes.abs(): string `0${zoneOffset.minutes.abs()}`)}`;
+            civilString += (zoneOffset.hours >= 0 ? "+" : "-");
+            civilString += string `${zoneOffset.hours.abs() > 9 ? zoneOffset.hours.abs() : string `0${zoneOffset.hours.abs()}`}`;
+            civilString += string `:${(zoneOffset.minutes.abs() > 9 ? zoneOffset.minutes.abs() : string `0${zoneOffset.minutes.abs()}`)}`;
             time:Seconds? seconds = zoneOffset.seconds;
             if seconds !is () {
-                civilString += string `:${(seconds.abs() > 9d? seconds: string `0${seconds.abs()}`)}`;
+                civilString += string `:${(seconds.abs() > 9d ? seconds : string `0${seconds.abs()}`)}`;
             } else {
                 civilString += string `:00`;
             }
 
-        } if civil.timeAbbrev !is () {
+        }
+        if civil.timeAbbrev !is () {
             civilString += string `(${<string>civil.timeAbbrev})`;
         }
         return civilString;
@@ -477,7 +475,7 @@ public isolated client class GoogleSheetsClient {
         string? timeAbbrev = ();
         regexp:Span? find = re `\(.*\)`.find(civilString.trim(), 0);
         if find !is () {
-            timeAbbrev = civilString.trim().substring(find.startIndex+1, find.endIndex-1);
+            timeAbbrev = civilString.trim().substring(find.startIndex + 1, find.endIndex - 1);
         }
         string[] civilArray = re `T`.split(re `\(.*\)`.replace(civilString.trim(), ""));
         civilDateString = civilArray[0];
@@ -543,6 +541,56 @@ public isolated client class GoogleSheetsClient {
         } else {
             return <error>error("Error: unsupported time format");
         }
+    }
+
+    private isolated function sendRequest(http:Client httpClient, string path) returns json|error {
+        http:Response|error httpResponse = httpClient->get(path);
+        if httpResponse is http:Response {
+            int statusCode = httpResponse.statusCode;
+            json|error jsonResponse = httpResponse.getJsonPayload();
+            if jsonResponse is json {
+                error? validateStatusCodeRes = self.validateStatusCode(jsonResponse, statusCode);
+                if (validateStatusCodeRes is error) {
+                    return validateStatusCodeRes;
+                }
+                return jsonResponse;
+            } else {
+                return self.getSpreadsheetError(jsonResponse);
+            }
+        } else {
+            return self.getSpreadsheetError(<json|error>httpResponse);
+        }
+    }
+
+    private isolated function validateStatusCode(json response, int statusCode) returns error? {
+        if statusCode != http:STATUS_OK {
+            return self.getSpreadsheetError(response);
+        }
+    }
+    isolated function getSpreadsheetError(json|error errorResponse) returns error {
+        if errorResponse is json {
+            return error(errorResponse.toString());
+        } else {
+            return errorResponse;
+        }
+    }
+
+    private isolated function convertToArray(json jsonResponse) returns string[][] {
+        string[][] values = [];
+        json|error jsonResponseValues = jsonResponse.values;
+        json[] jsonValues = [];
+        if jsonResponseValues is json {
+            jsonValues = <json[]>jsonResponseValues;
+        }
+        foreach json value in jsonValues {
+            json[] jsonValArray = <json[]>value;
+            string[] temp = [];
+            foreach json v in jsonValArray {
+                temp.push(v.toString());
+            }
+            values.push(temp);
+        }
+        return values;
     }
 
 }
