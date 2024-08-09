@@ -140,7 +140,7 @@ function gsheetsDepartmentRelationsTest() returns error? {
     stream<DepartmentInfo, error?> departmentStream = rainierClient->/departments.get();
     DepartmentInfo[] departments = check from DepartmentInfo department in departmentStream
         select department;
-
+    runtime:sleep(40); // avoid quote exceed issue
     DepartmentInfo retrieved = check rainierClient->/departments/["department-12"].get();
 
     DepartmentInfo expected = {
