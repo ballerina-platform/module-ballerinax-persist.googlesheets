@@ -19,15 +19,9 @@
 package io.ballerina.stdlib.persist.googlesheets.datastore;
 
 import io.ballerina.runtime.api.Environment;
-import io.ballerina.runtime.api.Future;
-import io.ballerina.runtime.api.PredefinedTypes;
-import io.ballerina.runtime.api.async.Callback;
-import io.ballerina.runtime.api.creators.TypeCreator;
+import io.ballerina.runtime.api.concurrent.StrandMetadata;
 import io.ballerina.runtime.api.creators.ValueCreator;
-import io.ballerina.runtime.api.types.ErrorType;
 import io.ballerina.runtime.api.types.RecordType;
-import io.ballerina.runtime.api.types.StreamType;
-import io.ballerina.runtime.api.types.Type;
 import io.ballerina.runtime.api.values.BArray;
 import io.ballerina.runtime.api.values.BError;
 import io.ballerina.runtime.api.values.BMap;
@@ -35,15 +29,11 @@ import io.ballerina.runtime.api.values.BObject;
 import io.ballerina.runtime.api.values.BStream;
 import io.ballerina.runtime.api.values.BString;
 import io.ballerina.runtime.api.values.BTypedesc;
-import io.ballerina.stdlib.persist.ModuleUtils;
-import io.ballerina.stdlib.persist.googlesheets.Constants;
 import io.ballerina.stdlib.persist.googlesheets.Utils;
 
 import java.util.Map;
 
-import static io.ballerina.stdlib.persist.Constants.ERROR;
 import static io.ballerina.stdlib.persist.Constants.KEY_FIELDS;
-import static io.ballerina.stdlib.persist.Constants.RUN_READ_BY_KEY_QUERY_METHOD;
 import static io.ballerina.stdlib.persist.Constants.RUN_READ_QUERY_METHOD;
 import static io.ballerina.stdlib.persist.ErrorGenerator.wrapError;
 import static io.ballerina.stdlib.persist.Utils.getEntity;
@@ -52,6 +42,7 @@ import static io.ballerina.stdlib.persist.Utils.getMetadata;
 import static io.ballerina.stdlib.persist.Utils.getPersistClient;
 import static io.ballerina.stdlib.persist.Utils.getRecordTypeWithKeyFields;
 import static io.ballerina.stdlib.persist.Utils.getTransactionContextProperties;
+import static io.ballerina.stdlib.persist.googlesheets.Constants.RUN_READ_TABLE_AS_STREAM_METHOD;
 import static io.ballerina.stdlib.persist.googlesheets.Utils.getEntityFromStreamMethod;
 import static io.ballerina.stdlib.persist.googlesheets.Utils.getFieldTypes;
 
@@ -77,8 +68,6 @@ public class GoogleSheetsProcessor {
 
         RecordType recordTypeWithIdFields = getRecordTypeWithKeyFields(keyFields, recordType);
         BTypedesc targetTypeWithIdFields = ValueCreator.createTypedescValue(recordTypeWithIdFields);
-        StreamType streamTypeWithIdFields = TypeCreator.createStreamType(recordTypeWithIdFields,
-                PredefinedTypes.TYPE_NULL);
 
         BArray[] metadata = getMetadata(recordType);
         BArray fields = metadata[0];
@@ -87,39 +76,28 @@ public class GoogleSheetsProcessor {
         BMap<BString, Object> typeMap = getFieldTypes(recordType);
 
         Map<String, Object> trxContextProperties = getTransactionContextProperties();
-        String strandName = env.getStrandName().isPresent() ? env.getStrandName().get() : null;
-
-        Future balFuture = env.markAsync();
-        env.getRuntime().invokeMethodAsyncSequentially(
-                // Call `GoogleSheetsClient.runReadQuery(
-                //      typedesc<record {}> rowType, map<anydata> typeMap, string[] fields = [], string[] include = []
-                // ` which returns `stream<record {}, error?>|persist:Error`
-
-                persistClient, RUN_READ_QUERY_METHOD, strandName, env.getStrandMetadata(), new Callback() {
-                    @Override
-                    public void notifySuccess(Object o) {
-                        if (o instanceof BStream) { // stream<record {}, error?>
-                            BStream gSheetStream = (BStream) o;
-                            balFuture.complete(Utils.createPersistGSheetsStreamValue(gSheetStream, targetType, fields,
-                                    includes, typeDescriptions, persistClient, null));
-                        } else { // persist:Error
-                            BError persistError = (BError) o;
-                            balFuture.complete(Utils.createPersistGSheetsStreamValue(null, targetType, fields, includes,
-                                    typeDescriptions, persistClient, persistError));
-                        }
-                    }
-
-                    @Override
-                    public void notifyFailure(BError bError) {
-                        BError persistError = wrapError(bError);
-                        balFuture.complete(Utils.createPersistGSheetsStreamValue(null, targetType, fields, includes,
-                                typeDescriptions, persistClient, persistError));
-                    }
-                }, trxContextProperties, streamTypeWithIdFields,
-                targetTypeWithIdFields, true, typeMap, true, fields, true, includes, true
-        );
-
-        return null;
+        return env.yieldAndRun(() -> {
+            try {
+                Object result = env.getRuntime().callMethod(
+                        // Call `RedisClient.runReadQuery(
+                        // typedesc<record {}> rowType, map<anydata> typeMap, string[] fields = [],
+                        // string[] include = []
+                        // )`
+                        // which returns `stream<record{}|error?>|persist:Error`
+                        persistClient, RUN_READ_QUERY_METHOD, new StrandMetadata(false, trxContextProperties),
+                        targetTypeWithIdFields, typeMap, fields, includes);
+                if (result instanceof BStream bStream) { // stream<record {}, redis:Error?>
+                    return Utils.createPersistGSheetsStreamValue(bStream, targetType, fields, includes,
+                            typeDescriptions, persistClient, null);
+                }
+                // persist:Error
+                return Utils.createPersistGSheetsStreamValue(null, targetType, fields, includes, typeDescriptions,
+                        persistClient, (BError) result);
+            } catch (BError bError) {
+                return Utils.createPersistGSheetsStreamValue(null, targetType, fields, includes, typeDescriptions,
+                        persistClient, bError);
+            }
+        });
     }
 
     public static BStream queryStream(Environment env, BObject client, BTypedesc targetType) {
@@ -132,8 +110,6 @@ public class GoogleSheetsProcessor {
 
         RecordType recordTypeWithIdFields = getRecordTypeWithKeyFields(keyFields, recordType);
         BTypedesc targetTypeWithIdFields = ValueCreator.createTypedescValue(recordTypeWithIdFields);
-        StreamType streamTypeWithIdFields = TypeCreator.createStreamType(recordTypeWithIdFields,
-                PredefinedTypes.TYPE_NULL);
 
         BArray[] metadata = getMetadata(recordType);
         BArray fields = metadata[0];
@@ -142,39 +118,28 @@ public class GoogleSheetsProcessor {
         BMap<BString, Object> typeMap = getFieldTypes(recordType);
 
         Map<String, Object> trxContextProperties = getTransactionContextProperties();
-        String strandName = env.getStrandName().isPresent() ? env.getStrandName().get() : null;
-
-        Future balFuture = env.markAsync();
-        env.getRuntime().invokeMethodAsyncSequentially(
-                // Call `GoogleSheetsClient.readTableAsStream(
-                //      typedesc<record {}> rowType, map<anydata> typeMap, string[] fields = [], string[] include = []
-                // )' which returns `stream<record {}, persist:Error?>|persist:Error`
-
-                persistClient, Constants.RUN_READ_TABLE_AS_STREAM_METHOD, strandName, env.getStrandMetadata(),
-                new Callback() {
-                    @Override
-                    public void notifySuccess(Object o) {
-                        if (o instanceof BStream) { // stream<record {}, persist:Error?>
-                            BStream gSheetStream = (BStream) o;
-                            balFuture.complete(Utils.createPersistGSheetsStreamValue(gSheetStream, targetType, fields,
-                                    includes, typeDescriptions, persistClient, null));
-                        } else { // persist:Error
-                            BError persistError = (BError) o;
-                            balFuture.complete(Utils.createPersistGSheetsStreamValue(null, targetType, fields, includes,
-                                    typeDescriptions, persistClient, persistError));
-                        }
-                    }
-
-                    @Override
-                    public void notifyFailure(BError bError) {
-                        BError persistError = wrapError(bError);
-                        balFuture.complete(Utils.createPersistGSheetsStreamValue(null, targetType, fields, includes,
-                                typeDescriptions, persistClient, persistError));
-                    }
-                }, trxContextProperties, streamTypeWithIdFields,
-                targetTypeWithIdFields, true, typeMap, true, fields, true, includes, true
-        );
-        return null;
+        return env.yieldAndRun(() -> {
+            try {
+                Object result = env.getRuntime().callMethod(
+                        // Call `RedisClient.runReadQuery(
+                        // typedesc<record {}> rowType, map<anydata> typeMap, string[] fields = [],
+                        // string[] include = []
+                        // )`
+                        // which returns `stream<record{}|error?>|persist:Error`
+                        persistClient, RUN_READ_TABLE_AS_STREAM_METHOD, new StrandMetadata(false, trxContextProperties),
+                        targetTypeWithIdFields, typeMap, fields, includes);
+                if (result instanceof BStream bStream) { // stream<record {}, redis:Error?>
+                    return Utils.createPersistGSheetsStreamValue(bStream, targetType, fields, includes,
+                            typeDescriptions, persistClient, null);
+                }
+                // persist:Error
+                return Utils.createPersistGSheetsStreamValue(null, targetType, fields, includes,
+                        typeDescriptions, persistClient, (BError) result);
+            } catch (BError bError) {
+                return Utils.createPersistGSheetsStreamValue(null, targetType, fields, includes, typeDescriptions,
+                        persistClient, bError);
+            }
+        });
     }
 
     public static Object queryOne(Environment env, BObject client, BArray path, BTypedesc targetType) {
@@ -187,8 +152,6 @@ public class GoogleSheetsProcessor {
 
         RecordType recordTypeWithIdFields = getRecordTypeWithKeyFields(keyFields, recordType);
         BTypedesc targetTypeWithIdFields = ValueCreator.createTypedescValue(recordTypeWithIdFields);
-        ErrorType persistErrorType = TypeCreator.createErrorType(ERROR, ModuleUtils.getModule());
-        Type unionType = TypeCreator.createUnionType(recordTypeWithIdFields, persistErrorType);
 
         BArray[] metadata = getMetadata(recordType);
         BArray fields = metadata[0];
@@ -198,33 +161,19 @@ public class GoogleSheetsProcessor {
         Object key = getKey(env, path);
 
         Map<String, Object> trxContextProperties = getTransactionContextProperties();
-        String strandName = env.getStrandName().isPresent() ? env.getStrandName().get() : null;
-
-        Future balFuture = env.markAsync();
-
-        env.getRuntime().invokeMethodAsyncSequentially(
-                // Call `GoogleSheetsClient.runReadByKeyQuery(
-                //      typedesc<record {}> rowType, typedesc<record {}> rowTypeWithIdFields, map<anydata> typeMap,
-                //      anydata key, string[] fields = [], string[] include = [],
-                //      typedesc<record {}>[] typeDescriptions = []
-                // ) returns record {}|persist:Error
-
-                getPersistClient(client, entity), RUN_READ_BY_KEY_QUERY_METHOD, strandName, env.getStrandMetadata(),
-                new Callback() {
-                    @Override
-                    public void notifySuccess(Object o) {
-                        balFuture.complete(o);
-                    }
-
-                    @Override
-                    public void notifyFailure(BError bError) {
-                        BError persistError = wrapError(bError);
-                        balFuture.complete(persistError);
-                    }
-                },  trxContextProperties, unionType,
-                targetType, true, targetTypeWithIdFields, true, typeMap, true, key, true, fields, true, includes, true,
-                typeDescriptions, true
-        );
-        return null;
+        return env.yieldAndRun(() -> {
+            try {
+                return  env.getRuntime().callMethod(
+                        // Call `RedisClient.runReadQuery(
+                        // typedesc<record {}> rowType, map<anydata> typeMap, string[] fields = [],
+                        // string[] include = []
+                        // )`
+                        // which returns `stream<record{}|error?>|persist:Error`
+                        persistClient, RUN_READ_TABLE_AS_STREAM_METHOD, new StrandMetadata(false, trxContextProperties),
+                        targetType, targetTypeWithIdFields, typeMap, key, fields, includes, typeDescriptions);
+            } catch (BError bError) {
+                return wrapError(bError);
+            }
+        });
     }
 }
