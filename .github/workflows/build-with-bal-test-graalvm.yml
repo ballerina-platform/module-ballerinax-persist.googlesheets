@@ -37,4 +37,3 @@ jobs:
       native_image_options: '-J-Xmx7G ${{ inputs.native_image_options }}'
       additional_windows_build_flags: '-x test'
     secrets: inherit
-    
