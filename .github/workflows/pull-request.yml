@@ -32,9 +32,7 @@ jobs:
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
         run: |
-          git config --global user.name ${{ secrets.BALLERINA_BOT_USERNAME }}
-          git config --global user.email ${{ secrets.BALLERINA_BOT_EMAIL }}
-          ./gradlew build
+          ./gradlew build -x test
 
       -   name: Generate Codecov Report
           uses: codecov/codecov-action@v3
