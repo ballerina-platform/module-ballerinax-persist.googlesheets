@@ -1,8 +1,13 @@
-# Overview
+## Overview
 
-This package provides Google sheets support for the `bal persist` feature, which provides functionality to store and query data from a Google sheets conveniently through a data model.
+The Persist Google Sheets connector provides Google Sheets support for the `bal persist` feature, enabling data storage and querying from Google Sheets conveniently through a data model.
 
-The Google Sheets data store is a cloud-based spreadsheet application that stores data in tables. The Google Sheets data store is useful for storing data in a spreadsheet format. 
+### Key Features
+
+- Store and query data from Google Sheets through a data model
+- Support for multiple Ballerina types with automatic type conversion
+- Integration with `bal build` for seamless code generation
+- OAuth 2.0 authentication with Google Sheets API
 
 ## How to use with `bal persist`
 
@@ -90,11 +95,19 @@ The `script.gs` file generated from the `bal persist generate` command can initi
 API tokens for the Google sheets can be obtained using the following procedure.
 1. Get the clientID, and client secret using the code following [guidelines](https://developers.google.com/identity/protocols/oauth2).
 2. If you want to use [OAuth 2.0 playground](https://developers.google.com/oauthplayground) to receive the authorization code and obtain the access token and refresh token, Follow below steps.
-   1. Go to the [OAuth 2.0 playground](https://developers.google.com/oauthplayground).
-   2. Click the settings icon ![settings icon](https://developers.google.com/oauthplayground/assets/images/settings.png) on the top right corner of the page.
-   3. Select the checkbox `Use your own OAuth credentials`.
-   4. Enter the OAuth Client ID and OAuth Client secret.
-   5. Click `Close`.
-   6. Select the required Google Sheets API scopes.
-   7. Click `Authorize APIs`.
-   8. Click `Exchange authorization code for tokens` to obtain the access token and refresh token.
+    1. Go to the [OAuth 2.0 playground](https://developers.google.com/oauthplayground).
+    2. Click the settings icon ![settings icon](https://developers.google.com/oauthplayground/assets/images/settings.png) on the top right corner of the page.
+    3. Select the checkbox `Use your own OAuth credentials`.
+    4. Enter the OAuth Client ID and OAuth Client secret.
+    5. Click `Close`.
+    6. Select the required Google Sheets API scopes.
+    7. Click `Authorize APIs`.
+    8. Click `Exchange authorization code for tokens` to obtain the access token and refresh token.
+
+## Report issues
+
+To report bugs, request new features, start new discussions, view project boards, etc., go to the [Ballerina standard library parent repository](https://github.com/ballerina-platform/ballerina-standard-library).
+
+## Useful links
+- Chat live with us via our [Discord server](https://discord.gg/ballerinalang).
+- Post all technical questions on Stack Overflow with the [#ballerina](https://stackoverflow.com/questions/tagged/ballerina) tag.
