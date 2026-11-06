@@ -203,7 +203,7 @@ For example, the row of the `OrderItem` record with the identity fields `orderId
     | `int`, `float`, `decimal` | The number. | The number parsed from the string, with `int:fromString`, `float:fromString` or `decimal:fromString`. |
     | `boolean` | The boolean. | `true` when the string is `TRUE`, and `false` otherwise. |
     | `string`, enum types | The string. | The string. |
-    | `time:Date` | `<day>-<month>-<year>`, without leading zeros. | The date parsed from that form. |
+    | `time:Date` | `<day>-<month>-<year>`, without leading zeros. | The date parsed from that form. A cell whose format shows the date in another form, such as `3/1/2024`, cannot be converted. |
     | `time:TimeOfDay` | `<hour>-<minute>-<second>`, without leading zeros. | The time of day parsed from that form. |
     | `time:Utc` | The string of `time:utcToString`. | The value of `time:utcFromString`. |
     | `time:Civil` | `<YYYY>-<MM>-<DD>T<hh>:<mm>`, followed by `:<ss>` when the seconds are present, by `<+\|-><hh>:<mm>:<ss>` when the UTC offset is present, and by `(<abbreviation>)` when the time abbreviation is present. Each field except the year and the fraction of the seconds has two digits. The seconds of the UTC offset are `00` when absent. | The civil time parsed from that form. |
@@ -234,7 +234,7 @@ The generated client implements the resource methods of the persist specificatio
     1. Looks up the rows whose row metadata is that of the record. If there is such a row, it returns a `persist:AlreadyExistsError`, whose key is a record of the identity fields of the record.
     2. Appends a row with the values of the record.
     3. Attaches the row metadata of the record to the appended row, as specified in [5.3](#53-row-identity).
-2. The records that `post` inserted before a failure stay in the sheet. The lookup in step 1.1 and the append in step 1.2 are separate requests, so a record inserted by another client between them is not detected.
+2. The records that `post` inserted before a failure stay in the sheet. If attaching the row metadata fails, the appended row also stays, without row metadata: a retry can append another row with the same identity, and `put` and `delete` do not find the row. The lookup in step 1.1 and the append in step 1.2 are separate requests, so a record inserted by another client between them is not detected.
 3. `put` updates the record with the given identity:
     1. The client looks up the rows whose row metadata is that of the identity. If there is no such row, it returns a `persist:NotFoundError`. If there is more than one, it returns a `persist:Error` with the message `Multiple elements found for given key: <key>`.
     2. It writes the whole row: the given identity for the identity fields, the values of the update record for the fields that it has, and the current values of the row for the other fields.
